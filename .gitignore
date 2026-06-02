@@ -49,7 +49,12 @@ wandb/
 
 # ── Eval output JSONs (large result files, regenerate with evaluate_qwen.py)
 outputs/eval_*.json
+outputs/qwen_validation_results.json
+outputs/salmonn_validation_results.json
 # Keep: experiments/runs.json  data/*.json  musiccaps_processed.json
+
+# ── TensorBoard event files ──────────────────────────────────────────────────
+outputs/qwen_musiccaps_finetuned/runs/
 
 # ── Third-party model repos (download separately — see README) ────────────
 salmonn/SALMONN/

@@ -348,5 +348,94 @@
       "grad_norm increasing in later epochs — monitor overfitting with val split"
     ],
     "next_experiment": "exp-004"
+  },
+  {
+    "id": "exp-004",
+    "date": "2026-06-02",
+    "name": "qwen2-audio-lora-v4-10ep-1k",
+    "status": "completed_eval_pending",
+    "description": "2× more data (503→1003 samples) + double epochs (5→10). First run to reach loss < 5.5. Strong monotone per-epoch improvement throughout all 10 epochs.",
+    "model": {
+      "base": "Qwen/Qwen2-Audio-7B-Instruct",
+      "lora": { "r": 16, "alpha": 32, "target_modules": ["q_proj","k_proj","v_proj","o_proj"], "dropout": 0.05 },
+      "projector_unfrozen": true,
+      "trainable_params": 16777216,
+      "total_params": 7771656192,
+      "trainable_pct": 0.2159
+    },
+    "dataset": {
+      "source": "google/MusicCaps",
+      "total_available": 1003,
+      "note": "data/train.json and data/val.json split added after this run"
+    },
+    "training": {
+      "epochs": 10,
+      "per_device_batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "effective_batch_size": 8,
+      "learning_rate": 1e-5,
+      "warmup_steps": 63,
+      "warmup_pct_of_total": 5.0,
+      "lr_scheduler": "cosine",
+      "max_grad_norm": 0.5,
+      "fp16": true,
+      "total_steps": 1250,
+      "steps_per_epoch": 125,
+      "save_strategy": "epoch",
+      "runtime_hours": 4.2
+    },
+    "loss_curve_by_epoch": [
+      { "epoch": 1,  "avg_loss": 9.064 },
+      { "epoch": 2,  "avg_loss": 8.424 },
+      { "epoch": 3,  "avg_loss": 7.688 },
+      { "epoch": 4,  "avg_loss": 7.144 },
+      { "epoch": 5,  "avg_loss": 6.625 },
+      { "epoch": 6,  "avg_loss": 6.120 },
+      { "epoch": 7,  "avg_loss": 5.804 },
+      { "epoch": 8,  "avg_loss": 5.599 },
+      { "epoch": 9,  "avg_loss": 5.484 },
+      { "epoch": 10, "avg_loss": 5.387 }
+    ],
+    "loss_summary": {
+      "first_step": 9.147,
+      "last_step":  5.354,
+      "min_step":   4.534,
+      "avg_all":    6.726,
+      "epoch_delta": -3.677,
+      "grad_norm_range": [16.72, 38.72]
+    },
+    "lora_weights_final": {
+      "lora_B_rms": 0.000563,
+      "lora_A_rms": 0.009312,
+      "projector_rms": 0.01392,
+      "lora_B_vs_exp003": "6x growth (9.4e-5 → 5.63e-4)"
+    },
+    "checkpoints": [
+      "outputs/qwen_musiccaps_finetuned/checkpoint-125",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-250",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-375",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-500",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-625",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-750",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-875",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-1000",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-1125",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-1250"
+    ],
+    "evaluation": null,
+    "observations": [
+      "Monotone loss decline across all 10 epochs: 9.06→5.39 (Δ=-3.68) — strongest training signal so far",
+      "Loss still declining at ep10 (5.48→5.39), but slowing (Δ=-0.10 vs ep9-10) — approaching convergence",
+      "Minimum step loss 4.534 at step 1140 (ep9.1) — best single-step result across all experiments",
+      "lora_B_rms 6× higher than exp-003 — model has adapted significantly more",
+      "grad_norm crept up to 38.7 at peak — worth monitoring for potential instability with more data",
+      "train/val split added post-run (data/train.json 900, data/val.json 100) for future experiments"
+    ],
+    "issues": [
+      "No validation set used during training — overfitting risk unknown",
+      "exp-005 should use data/train.json (900 samples) and monitor val loss",
+      "Grad norm increasing trend (16→38) suggests may benefit from lower max_grad_norm=0.3"
+    ],
+    "next_experiment": "exp-005"
   }
 ]

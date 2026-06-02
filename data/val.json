@@ -1,0 +1,1771 @@
+[
+    {
+        "wav_path": "./musiccaps_audio/21MgIcLN8Ow.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a didgeridoo melody being played. The recording is noisy and in mono.",
+        "aspect_list": [
+            "low quality",
+            "mono",
+            "noisy",
+            "didgeridoo melody"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7_Sr2zv1sQc.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a traditional song that consists of passionate female vocal singing over sustained string melody, wobble bass, wooden percussive elements and shimmering shakers. It is a bit noisy, in mono and it sounds vintage, passionate, emotional and soulful.",
+        "aspect_list": [
+            "wobble bass",
+            "wooden percussive elements",
+            "shimmering shakers",
+            "passionate female vocal",
+            "sustained strings melody",
+            "traditional",
+            "vintage",
+            "noisy",
+            "low quality",
+            "passionate",
+            "emotional",
+            "soulful",
+            "mono"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/3OUNEL8XaR0.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This music is a soothing instrumental. The tempo is slow with a beautiful violin symphony, romantic piano accompaniment, harp melody, a wind instrument and shakers. The music is mellifluous, gentle,pensive, nostalgic, poignant, melancholic,\nromantic, enthralling, enigmatic, dreamy, calming and ethereal.",
+        "aspect_list": [
+            "instrumental",
+            "slow tempo",
+            "violin harmony",
+            "melodic piano",
+            "melancholic",
+            "shaker song",
+            "pensive",
+            "poignant",
+            "harp",
+            "wind instrument",
+            "soothing",
+            "mellow",
+            "calming",
+            "enigmatic",
+            "ethereal",
+            "dreamy",
+            "peaceful",
+            "pensive"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2SI_uNBcSyw.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is the nightcore version of a rock music piece. There is a distorted electric guitar sound playing the main melody and a bass guitar in the background. The rhythm consists of a slightly fast-paced and hard-hitting rock acoustic drum beat. The atmosphere is rebellious. This piece could be used in the soundtrack of an anime.",
+        "aspect_list": [
+            "nightcore",
+            "rock music",
+            "acoustic drums",
+            "distorted electric guitar",
+            "bass guitar",
+            "hard-hitting",
+            "rebellious",
+            "aggressive"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9hCnEfZFZ04.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a reverberant acoustic guitar melody. It sounds passionate and emotional. The recording is noisy.",
+        "aspect_list": [
+            "low quality",
+            "reverberant acoustic guitar melody",
+            "passionate",
+            "emotional",
+            "noisy"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7XQN9XDnRm4.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The song is led by a theremin whistle which plays high pitched tones and a harp playing arpeggios in the background. The feel of the song is soothing, tranquil, ethereal - and makes you feel as if you are peacefully sitting in an otherworldly environment.",
+        "aspect_list": [
+            "theremin",
+            "harp",
+            "soothing",
+            "atmospheric",
+            "gentle",
+            "tranquil",
+            "ethereal",
+            "heavenly",
+            "high pitched whistle tone"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0nk7utNkHOY.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This music is a western classical instrumental. The tempo is slow with a cello solo. The music is soft, rich, deep, mellow, euphonious, pensive, melancholic, emotional and sentimental.",
+        "aspect_list": [
+            "instrumental",
+            "slow tempo",
+            "orchestra",
+            "violin symphony",
+            "pensive",
+            "melancholy",
+            "nostalgic",
+            "soft",
+            "cello",
+            "viola",
+            "violins",
+            "string instruments",
+            "bow stringed instruments",
+            "melodic",
+            "euphonious",
+            "fiddle",
+            "deep sound",
+            "rich",
+            "vibrant",
+            "low pitch",
+            "western classical",
+            "classical music",
+            "engaging",
+            "captivating",
+            "enthralling"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1OIfQHKnAcw.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male singer sings this emotional melody. The song is medium tempo with a piano accompaniment and a strong bass drum kick . The song is emotional and romantic. The song is a home music video .",
+        "aspect_list": [
+            "male singer",
+            "piano accompaniment",
+            "soloist",
+            "modern love",
+            "loneliness",
+            "breakup song",
+            "mameluke in love",
+            "music covers",
+            "youtube music videos",
+            "youtube music artist",
+            "modern pop hits",
+            "courtship song",
+            "desperate for you",
+            "madly in love",
+            "original song",
+            "acoustic pop",
+            "emotional",
+            "love song",
+            "sentimental",
+            "strong bass line",
+            "keyboard accompaniment"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0c1YU_VtFRE.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This recording is full of environmental sounds like wind and other sounds. Then at the end a beep tone comes and an acoustic piano is playing an arpeggio melody with reverb on it. This is an amateur recording. This song may be used as an outro or intro in an amateur video.",
+        "aspect_list": [
+            "acoustic piano",
+            "background-noises",
+            "wind",
+            "amateur recording",
+            "upbeat"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1PKxdTlquCA.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The Pop song features a flat female vocal, supported by wide harmonizing background vocals, singing over groovy acoustic rhythm guitar, offbeat shimmering open hats, claps, offbeat synth keys chords and a simple \"4 on the floor\" kick pattern that perfectly complements the groovy bass. Sounds energetic and uptempo, like something you would hear in clubs, or on a radio.",
+        "aspect_list": [
+            "pop",
+            "4 on the floor kick",
+            "offbeat synth keys chords",
+            "groovy bass",
+            "claps",
+            "offbeat shimmering open hats",
+            "flat female vocal",
+            "wide background harmonizing vocals",
+            "groovy acoustic rhythm guitar",
+            "uptempo",
+            "energetic"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/4yJZ4VX8XQI.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This song features synth pads playing in the background. Shimmering notes are played in this song. These notes are played three times. There are no voices in this song. There are no other instruments in this song. This instrumental song has a dreamy feel. This song can be played in a relaxation room or meditation center.",
+        "aspect_list": [
+            "synth song",
+            "shimmering sounds",
+            "no percussion",
+            "no other instruments",
+            "no voice",
+            "slow tempo",
+            "dreamy song",
+            "meditation music",
+            "relaxation music"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/940MNbCeobw.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is the recording of a cowbell. The cowbell is being played with the side and the tip of the drumstick repeatedly. This recording could be sampled for use in beat-making especially for genres that have a heavy usage of cowbells such as latin dance music.",
+        "aspect_list": [
+            "instrumental",
+            "percussion",
+            "rhythm",
+            "cowbell"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-88me9bBzrk.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "Someone is playing a fast melody on a low bansuri flute along with someone playing tablas and a shrutibox in the background. This song may be playing at a live performance.",
+        "aspect_list": [
+            "hindi",
+            "tablas",
+            "shrutibox",
+            "bansuri flute",
+            "medium tempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/6JJMlY3Go9s.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male vocalist sings this emphatic rock. The tempo is medium with vigorous electric guitar, synthesiser arrangement, groovy bass line and intense drumming. The vocals are soft ,sad, lonely, poignant, mellow, and melodic in contrast to the intense instrumentation. This song is Blues-Rock.",
+        "aspect_list": [
+            "male singer",
+            "medium tempo",
+            "sad",
+            "depressed",
+            "heart break",
+            "blues-rock",
+            "vigorous electric guitar riff",
+            "breakup",
+            "hurt",
+            "poignant",
+            "bitter",
+            "lonely",
+            "blues-rockvigorous electric guitar",
+            "synthesiser arrangement",
+            "blues",
+            "rock",
+            "groovy bass line",
+            "intense drumming"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1_YHHL_t2GI.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features clapping and shoe tapping sounds over rock songs played on playback. The song consists of a passionate male vocal that sings over punchy kick and snare hits, shimmering hi hats, electric guitar melody and groovy bass guitar. The recording is in mono and a bit noisy, as it was probably recorded with a phone.",
+        "aspect_list": [
+            "low quality",
+            "clapping",
+            "shoe tapping",
+            "mono",
+            "noisy",
+            "rock",
+            "playback",
+            "passionate male vocal",
+            "electric guitar melody",
+            "punchy snare",
+            "shimmering hi hats",
+            "groovy bass guitar",
+            "punchy kick"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/8Yt55huZGZc.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a folk song that consists of passionate accordion melody played over sustained strings melody, groovy piano melody and groovy double bass. It sounds uplifting, passionate, emotional and it feels like something you would hear in France, played by street musicians.",
+        "aspect_list": [
+            "low quality",
+            "passionate accordion melody",
+            "groovy piano melody",
+            "sustained strings melody",
+            "groovy double bass",
+            "folk",
+            "uplifting",
+            "passionate",
+            "emotional"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/71KE7B1vvdI.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features an afrobeats song that consists flat male vocal, alongside wide harmonizing male vocals, rapping over sustained synth lead melody, short synth melody, groovy bass, soft kick hits, punchy snare, shimmering shakers and syncopated toms. The mix is bad, thus it sounds kind of unprofessional, but still energetic.",
+        "aspect_list": [
+            "afrobeats",
+            "low quality",
+            "shimmering shakers",
+            "syncopated toms",
+            "sustained synth lead melody",
+            "short synth melody",
+            "groovy bass",
+            "flat male vocal",
+            "harmonizing wide male vocals",
+            "punchy snare",
+            "soft kick hits",
+            "energetic"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/5n8I-br2n1U.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "a female voice is singing to a digital drum set along with a bass and old disco synthesizer sounds. The singer gets backed by a male singer and the crowd is singing along. There is clapping from the crowd. This song may be playing live at a concert.",
+        "aspect_list": [
+            "2000s pop",
+            "female singer",
+            "background cheering",
+            "synthesizer",
+            "drums",
+            "e-bass",
+            "male backing voice",
+            "uptempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/6vRBp8jo40Q.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The instrumental music features a string section playing an ascending long-note melody while at the same time providing harmonic support. A harp is playing arpeggios. Although it feels as if time passes slowly, the tempo is medium. Listening to this music I get a sense of profoundness that's moving me. This music could work well as the soundtrack for a movie.",
+        "aspect_list": [
+            "strings",
+            "harp",
+            "medium tempo",
+            "profound atmosphere",
+            "instrumental",
+            "no voice",
+            "movie music"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-BIMKnb3tlo.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a Hindustani classical music piece. There is a harmonium playing the main tune. A bansuri joins in to play, supporting a melody every now and then. The rhythmic background consists of the tabla percussion and the electronic drums. The atmosphere of the piece is joyful.",
+        "aspect_list": [
+            "hindustani classical music",
+            "harmonium",
+            "bansuri",
+            "tabla",
+            "electronic drums",
+            "upbeat",
+            "joyful"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/8fInAz_GICs.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a marching band piece. The only instruments playing are a snare drum and a bass drum. The snare drum is playing a drumroll while the bass drum is keeping the rhythm. This piece could be sampled for use in beat-making. It could also be playing in the background at a national holiday parade.",
+        "aspect_list": [
+            "marching band",
+            "rhythm",
+            "instrumental",
+            "snare drum",
+            "bass drum"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/8wty3wJfmEY.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male Latin singer sings this cool melody. The song is medium tempo with keyboard accompaniment and steady drumming rhythm and a percussive bass-line with missing harmonies. The song is experimental and has bad audio quality.",
+        "aspect_list": [
+            "male singer",
+            "booming bass line",
+            "bad audio quality",
+            "missing harmony section",
+            "experimental music",
+            "medium tempo",
+            "latin dance music",
+            "groovy music",
+            "percussive bass line",
+            "exciting",
+            "enthusiastic",
+            "passionate",
+            "spirited",
+            "romantic",
+            "keyboard harmony",
+            "percussive rhythm"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/8pl1D6oG38k.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features an electro song that consists of a punchy kick, buzzy synth bass, claps and shimmering hi-hats. It sounds exciting and a bit too digital - like something you would hear in old video games.",
+        "aspect_list": [
+            "low quality",
+            "electro",
+            "claps",
+            "punchy kick",
+            "buzzy synth bass",
+            "shimmering hi hats",
+            "digital",
+            "exciting"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7WZwlOrRELI.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a k-pop song with a bouncy and upbeat feel. The instrumental mainly revolves around an intricate bassline and its interplay with the four on the floor percussive pattern. The vocalist has a gentle and seductive voice.",
+        "aspect_list": [
+            "k-pop",
+            "pop",
+            "dance",
+            "four on the floor",
+            "upbeat",
+            "bright brass instruments",
+            "sensual female vocalist",
+            "korean lyrics",
+            "playful"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-cQ-jUTEgck.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a live performance of a southern rock piece. There is an electric guitar playing a blues solo. There is a bass guitar playing in the background. The rhythm is being played by the acoustic drums. The atmosphere is groovy. This piece could be playing in the background at a rock bar.",
+        "aspect_list": [
+            "southern rock",
+            "blues rock",
+            "live performance",
+            "electric guitar",
+            "guitar solo",
+            "keyboard",
+            "bass guitar",
+            "acoustic drums",
+            "groovy"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1Rd1w7Ty1ak.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a pop song that contains a soft male vocal singing over soft crash cymbals, claps, punchy kick, shimmering shakers, groovy bass, piano melody and electric guitar melody. It sounds easygoing.",
+        "aspect_list": [
+            "low quality",
+            "pop",
+            "electric guitar melody",
+            "punchy kick",
+            "shimmering shakers",
+            "groovy bass",
+            "claps",
+            "soft crash cymbals",
+            "soft male vocal",
+            "piano melody",
+            "easygoing"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/4Yc71_dU3m4.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This music is a lively instrumental of the Indian Classical instruments. The tempo is fast with a lead Veena harmony, spirited tabla and tanpura rhythm and melodic flute accompaniment. The music is euphoric, mellifluous, dulcet, lively, high spirited and rich. This music is a Indian Classical Veena instrumental.",
+        "aspect_list": [
+            "instrumental",
+            "fast tempo",
+            "lively veena harmony",
+            "raga",
+            "indian classical",
+            "hindustani instrumental",
+            "concert",
+            "north indian classical music",
+            "indian string instrument",
+            "indian wind instrument",
+            "sandhya raag",
+            "classical music",
+            "hindustani",
+            "taal",
+            "sruti",
+            "melodic flute harmony",
+            "tanpura",
+            "tabla rhythm",
+            "indian percussion"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9BHvpWP2V9Y.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A female singer sings this catchy tune with backup singers in vocal harmony. The song is medium tempo with a groovy bass line, keyboard accompaniment, steady drumming with a clapping percussion. The song is catchy and has a dance rhythm. The song is a pop dance song.",
+        "aspect_list": [
+            "female singer",
+            "funny song",
+            "backup singers",
+            "pop dance hits",
+            "dance club",
+            "vocal harmony",
+            "animated singing",
+            "steady drumming rhythm",
+            "keybiard accompaniment",
+            "clapping rhythm",
+            "percussion hits",
+            "catchy tune",
+            "dance rhythm",
+            "people dancing",
+            "energetic",
+            "children’s song",
+            "pop song",
+            "medium tempo",
+            "groovy bass line"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/4kKVGPDCIK8.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This song contains a male voice chanting a melody in the midrange while a synth is playing a drone full of overtones. Other synth pads are overlaying in a higher register while again other synth pluck sounds are playing a melody in a high key. This song may be playing in a meditation session.",
+        "aspect_list": [
+            "meditationmusic",
+            "male voice chanting",
+            "mid-range",
+            "synth pads",
+            "drones",
+            "plucks",
+            "slow tempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-ByoSbgzr4M.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This clip is an electronic guitar instrumental. The tempo is fast with a vigorous, lively electric guitar lead without any instrumentation. The music is rapid,controlled, intense and vigorous with immense control and dexterity with the instrument.",
+        "aspect_list": [
+            "instrumental",
+            "electric guitar",
+            "stringed instrument",
+            "vibrato",
+            "sonic power",
+            "amplified guitar",
+            "fast tempo",
+            "rapid",
+            "vigorous",
+            "dexterous",
+            "skilled",
+            "practice",
+            "intense",
+            "rock",
+            "hard rock",
+            "home recording"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-Bu7YaslRW0.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A synth pad is playing a drone sound in the lower mid range. Cymbals are creating atmosphere while a flute/string/brass sound is playing a melody. The whole recording is full of reverb. This song may be playing in a forest documentary.",
+        "aspect_list": [
+            "atmospheric",
+            "cinematic",
+            "calming",
+            "flute/string/brass sound",
+            "cymbals",
+            "synth pad drone",
+            "slow tempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0pewITE1550.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The song is an instrumental. The song is medium tempo with various marching band drums playing in sync. The song is highly energetic and spirited. The song is bad in audio quality. The song is a college marching band playing enthusiastically.",
+        "aspect_list": [
+            "poor audio quality",
+            "medium tempo",
+            "instrumental music",
+            "groovy rhythm",
+            "various percussion instruments",
+            "steady drum rhythm",
+            "various percussion hits",
+            "snares",
+            "drums",
+            "drum sticks",
+            "dance rhythm",
+            "samba",
+            "cheerleaders",
+            "college band",
+            "marching band",
+            "enthusiastic",
+            "passionate",
+            "energetic",
+            "high on adrenaline"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/5i0zq91Ocz0.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a psychedelic rock music piece. There is a male vocalist singing melodically in the lead. The main melody is being played by the keyboard with the backing of the electric guitar and the bass guitar. The rhythmic background consists of a rock acoustic drum beat. The atmosphere is chill and trippy. This piece could be used in the soundtrack of a drama movie or a TV series that has scenes of hallucinogenic trip sequences. It could also be playing in the background at a hippie coffee shop.",
+        "aspect_list": [
+            "psychedelic rock",
+            "folk rock",
+            "male vocal",
+            "melodic singing",
+            "electric guitar",
+            "keyboard",
+            "bass guitar",
+            "acoustic drums",
+            "chill",
+            "trippy",
+            "psychedelic"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2Ic1zm9mBjk.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The song is an instrumental. The song is medium tempo with a sitar playing solo, tabla playing percussively and other Indian percussion instruments. The song is emotional and poignant. The audio quality is very ordinary.",
+        "aspect_list": [
+            "classical hindustani music",
+            "sitar playing",
+            "sitarist",
+            "ethic indian instruments",
+            "double time percussion rhythm",
+            "groovy",
+            "himdustani music hits",
+            "live performance",
+            "tabla playing percussively",
+            "medium tempo",
+            "love performance",
+            "concert hall",
+            "instrumentals music",
+            "replacing",
+            "passionate",
+            "emotional",
+            "romantic",
+            "nostalgia",
+            "poor audio quality",
+            "ambient noises"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7RtQpW2dSU4.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a rock song that consists of a passionate female vocal, alongside harmonizing background female vocals, singing over wide acoustic guitar chords, groovy bass, punchy kick and snare hits. It sounds addictive and easygoing, even though the recording is a bit messy.",
+        "aspect_list": [
+            "low quality",
+            "rock",
+            "wide acoustic guitar chords",
+            "groovy bass",
+            "harmonizing background female vocals",
+            "passionate female vocal",
+            "punchy kick",
+            "punchy snare",
+            "shimmering hi hats",
+            "addictive",
+            "easygoing",
+            "messy"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/8m-a_6wLTkU.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording is a noisy and windy recording that has some asphalt sound effects in it and a wide, happy sounding background song added in postproduction. Sounds really loud and harsh, due to the wind.",
+        "aspect_list": [
+            "low quality",
+            "wide happy sounding background song",
+            "wind",
+            "noisy",
+            "asphalt sound effect",
+            "loud",
+            "harsh"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9A4VNkMdwhk.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a live performance of an instrumental folk song that contains sitar guitar melody and boomy bass. There are some background clapping sounds, probably from a crowd, by which we can conclude that it is in fact a live performance. It sounds like it was recorded with a phone.",
+        "aspect_list": [
+            "folk",
+            "sitar guitar melody",
+            "boomy bass",
+            "traditional",
+            "clapping",
+            "noisy",
+            "low quality",
+            "live performance",
+            "instrumental"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/5fPxUI0Fl-4.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This song contains two acoustic guitars picking a melody. A digital drum is playing a simple groove when a male voice starts to sing in a higher register with backing vocals. Then the melody drops one octave. The guitars are panned to the left and right side of the speakers. This song may be playing on a road trip with friends.",
+        "aspect_list": [
+            "pop",
+            "acoustic guitars",
+            "male voice singing",
+            "digital drums",
+            "medium to uptempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1yGWdegJjA4.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "Instrumental electro music with a half time feel in the kick and busy drums. The bass is constantly busy, with resonant filter sweeps for dramatic effect. There are multiple overlapping high synth melodies with big sounding reverb throughout. Perfect for a large outdoor or stadium EDM festival.",
+        "aspect_list": [
+            "edm",
+            "electro",
+            "busy drums",
+            "half time feel",
+            "epic",
+            "festival",
+            "stadium",
+            "busy resonant synth bass",
+            "big reverb",
+            "multiple synthesizer melodies overlapping",
+            "instrumental"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7muzlOrbDu8.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a cartoon theme in the style of alternative metal. There is a male lead vocal singing loudly while there are male back vocals singing more melodically. The distorted electric guitars and heavy bass guitar are playing an aggressive tune. The rhythmic background is provided by an acoustic drum beat just as aggressive. The atmosphere is energetic and action-filled. This piece can be used in the soundtrack of an action-based cartoon or a video game.",
+        "aspect_list": [
+            "cartoon theme",
+            "alternative metal",
+            "ska punk",
+            "male lead vocal",
+            "male back vocals",
+            "distorted electric guitar",
+            "bass guitar",
+            "acoustic drums",
+            "aggressive",
+            "action-filled",
+            "energetic"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/8WPG0dD20lg.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This instrumental song features a guitar played clean in the beginning and then switching to an overdrive sound. There are no other instruments in this song. There are no voices in this song. The mood of this song is bluesy.",
+        "aspect_list": [
+            "guitar song",
+            "overdriven guitar",
+            "clean guitar",
+            "no other instruments",
+            "sound comparison audio",
+            "no voice",
+            "instrumental"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9JlifkCmUOk.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a recording of a live indie rock performance. The recording is distorted and of a low quality. There are two male singers singing in an indie style with a lot of reverb applied to their vocals. The bass is rumbling and low and constant.",
+        "aspect_list": [
+            "live recording",
+            "indie rock",
+            "alternative rock",
+            "upbeat",
+            "low quality audio",
+            "fuzzy audio",
+            "distorted audio",
+            "indie male vocalist",
+            "reverb",
+            "bass rumbling"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/4PNPgaLKFlc.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The track is a Kids Music song. A female voice with appealing vocals sings an easygoing melody. A piano with a bright sound plays a jazzy melody. A jazz drum kit plays a smooth beat. In the background there are trumpets playing a melody that matches the positive and fun atmosphere of the track.",
+        "aspect_list": [
+            "kids music",
+            "positive",
+            "fun",
+            "bright piano",
+            "subtle trumpets",
+            "appealing female vocals",
+            "easygoing",
+            "mid-tempo",
+            "jazzy drums"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1hABzqBHh7w.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male vocalist sings this spirited song. The tempo is fast with trumpets, keyboard harmony, steady drumming and simple bass lines along with vocal backup. The song is happy, energetic, enthusiastic, popular, peppy, vivacious and celebratory. There are sounds in the background of people talking, hooting, cheering and scuttling and rustling. This is a popular Folk/Regional song.",
+        "aspect_list": [
+            "male singer",
+            "fast tempo",
+            "vocal backup",
+            "popular songs",
+            "hooting",
+            "rustling",
+            "home video",
+            "amateur recording",
+            "party songs",
+            "foreign language",
+            "lively trumpets",
+            "keyboard harmony",
+            "steady drumming",
+            "straight bass lines",
+            "vocal backup",
+            "people talking",
+            "cheering",
+            "energetic",
+            "happy",
+            "enthusiastic",
+            "home video",
+            "inferior audio quality",
+            "folk song",
+            "regional music",
+            "happy",
+            "peppy",
+            "chirpy"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1ILLsA6gqHE.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "Someone is playing various singing bowls. From low sounding ones to high sounding ones creating a melody. This song may be playing in a meditation session.",
+        "aspect_list": [
+            "amateur recording",
+            "singing bowls",
+            "slow tempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9STauy5DsC8.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male rapper sings this exciting melody. The tempo is fast with a groovy bass line, grunge keyboard tones, strong drumming rhythm, various percussion hits and beeping tones. The song is pulsating and energetic. The audio quality is very poor.",
+        "aspect_list": [
+            "male rapper",
+            "poor audio quality",
+            "beeping tones",
+            "fast tempo",
+            "people dancing",
+            "retro rap hits",
+            "tambourine percussions",
+            "strong drumming rhythm",
+            "percussive bass line",
+            "story telling",
+            "adrenaline rush",
+            "passionate",
+            "energetic",
+            "excitement",
+            "dance rhythm",
+            "dance groove",
+            "fats tempo",
+            "poor audio quality",
+            "rap hits",
+            "grunge keyboard tones"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/5_orEetudIA.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a manically played piano melody over punchy kick and snare hits, followed by uptempo hi hats and shimmering open hats. It sounds aggressive, mani and thin, as it lacks low frequencies.",
+        "aspect_list": [
+            "low quality",
+            "manic piano melody",
+            "punchy kick",
+            "punchy snare",
+            "uptempo hi hats",
+            "shimmering open hats",
+            "manic",
+            "uptempo",
+            "thin",
+            "aggressive"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7hKG33wkr0k.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a classical orchestra music that consists of wide strings, pulsating woodwind melody, glissando harp melody and heartbeat low tom hits. It sounds spooky, vintage, haunting, suspenseful and intense, like something you would hear as background music in a movie.",
+        "aspect_list": [
+            "orchestra",
+            "low quality",
+            "pulsating woodwind melody",
+            "classical",
+            "glissando harp melody",
+            "spooky",
+            "wide strings melody",
+            "heartbeat low tom hits",
+            "vintage",
+            "movie score",
+            "suspenseful",
+            "intense",
+            "haunting"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0kQjfwXjFuY.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is an instructive recording of a male vocalist singing in an erotic manner. A backwards reverb effect is applied to the vocal which gives the track a feeling of anticipation. This track could be used to exemplify the use of the backwards reverb effect in sound design courses.",
+        "aspect_list": [
+            "male vocal",
+            "medium-pitch singing",
+            "erotic",
+            "anticipation",
+            "sound effects",
+            "sound design",
+            "mixing",
+            "music production"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-qcTD2o6I9s.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The kick is playing on every beat along with a fast paced high hat and a snare sound. The digital bass is adding some spice and sounds overdriven. Pad sounds can be heard in the background while a synth lead sound is playing a simple repetitive melody. A male voice is rapping/singing. A lot of backing vocals with delay are adding energy to the mix. This song may be playing in a car.",
+        "aspect_list": [
+            "techno/pop",
+            "digital drums",
+            "synth lead",
+            "organ",
+            "pad sounds",
+            "male voice singing/rapping",
+            "backing vocals",
+            "fast tempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/298Q_pSLflU.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This song contains a lot of different synthesizer sounds. One is playing a lead melody in a higher register while two others are playing a rhythmic repeating melody in the mid and low register. This song may be playing in a club.",
+        "aspect_list": [
+            "techno",
+            "synthesizer pads",
+            "fast tempo",
+            "uplifting energy"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-4NLarMj4xU.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The Pop song features a soft female vocal singing over sustained pulsating synth lead, mellow piano melody, sustained synth brass, punchy kick, claps. tinny wide hi hats and high pitched female vocal melody. It sounds emotional, sad, passionate and like something you would hear on a radio.",
+        "aspect_list": [
+            "pop",
+            "tinny wide hi hats",
+            "mellow piano melody",
+            "high pitched female vocal melody",
+            "sustained pulsating synth lead",
+            "soft female vocal",
+            "punchy kick",
+            "sustained synth bass",
+            "claps",
+            "emotional",
+            "sad",
+            "passionate"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9K8EePrEDdo.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a live performance of a classical song and it contains trombone melody playing over shimmering hi hats and sustained strings. It sounds muffled, but also passionate and emotional.",
+        "aspect_list": [
+            "low quality",
+            "classical",
+            "live perfomrance",
+            "shimmering hi hats",
+            "trombone melody",
+            "sustained strings",
+            "muffled",
+            "passionate",
+            "emotional"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1mB_cboJR8s.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This meditation music features a male voice in a low tone chanting words in a melodic tone. There are no other instruments in this song. The mood of this song is relaxing. This song can be played in a meditation center.",
+        "aspect_list": [
+            "meditation music",
+            "religious chanting",
+            "low voice",
+            "no instruments",
+            "slow tempo",
+            "relaxation song"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/15z-gbPxdXg.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a finger style acoustic guitar melody. The recording is in mono, noisy and it sounds soulful and passionate.",
+        "aspect_list": [
+            "low quality",
+            "finger style acoustic guitar melody",
+            "metronome",
+            "mono",
+            "noisy",
+            "soulful",
+            "passionate"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/6vM7Kv42Uv0.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a pop song that consists of stuttering vocal effects, flat male vocal speaking alongside female vocal, bleating goat sound effect, some percussive elements, boomy bass, crispy snare and shimmering hi hats. There are some scratching effects in the left channel of the stereo field. It sounds funny and like it is a parody song.",
+        "aspect_list": [
+            "low quality",
+            "funny",
+            "pop",
+            "flat male vocal",
+            "stuttering vocal effect",
+            "wide layered vocals",
+            "bleating goat sound effect",
+            "percussive elements",
+            "shimmering hi hats",
+            "scratching sound effect",
+            "boomy bass",
+            "crispy snare",
+            "parody"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2Gja9wBkz6U.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a theremin solo melody. It sounds spacey and weird, as the recording is noisy.",
+        "aspect_list": [
+            "low quality",
+            "spacey",
+            "weird",
+            "theremin solo melody"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9ZAmdxKLnhs.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a neo-soul music piece. There is a male vocal singing melodically with another male back vocal singing in a more erotic fashion. The tune is played with a keyboard and a synth. There is a mellow bass line in the background. An acoustic-sounding electronic drum kit provides the rhythmic background. The piece has a seductive atmosphere to it. It could be played at a nightclub during earlier hours. It could also work well as the jingle of a fashion/fragrance advertisement.",
+        "aspect_list": [
+            "r&b",
+            "neo-soul",
+            "male vocals",
+            "melodic singing",
+            "keyboard",
+            "synth",
+            "mellow bass",
+            "electronic drums",
+            "harmonica",
+            "dance",
+            "seductive",
+            "intimate"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-YATTKBtmRA.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a hip-hop music piece. There is a crisp synth sound playing the melody. The piece has a strong bass sound. There is a melodic pad with beat repeat effect that uses a piano sample. The rhythmic background is provided by a loud electronic drum beat. The piece is energetic and modern sounding. It could be used in the soundtrack of a sci-fi movie where there is a lot of action going on.",
+        "aspect_list": [
+            "hip-hop",
+            "electronic",
+            "crisp synth",
+            "melodic pad",
+            "piano sample",
+            "strong bass",
+            "loud electronic drums",
+            "modern sounding",
+            "aggressive",
+            "energetic"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-OAyRsvFGgc.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a cover of a rock song that consists of an electric guitar solo melody played over playback instrumental. The instrumental features a punchy kick and snare hits, soft cymbals and smooth bass. It sounds passionate, even though the recording is muffled and noisy, as it was probably recorded with a phone.",
+        "aspect_list": [
+            "low quality",
+            "noisy",
+            "cover",
+            "rock",
+            "electric guitar solo melody",
+            "playback instrumental",
+            "punchy snare",
+            "punchy kick",
+            "smooth bass",
+            "soft cymbals",
+            "passionate",
+            "muffled"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/3zntWbS9XeI.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This audio clip features the end of an instrument with a lot of reverb. This additional reverb gives the ending an epic feel. At the end of the clip, a guitar chord is struck. There are no other instruments in this song. There are no voices in this song. This song can be used to promote a reverb pedal.",
+        "aspect_list": [
+            "epic song",
+            "instrumental",
+            "no voices",
+            "instrument reverb",
+            "guitar strum",
+            "minimal instruments",
+            "no percussion"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2BGzxAuetOA.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male vocalist sings this song. The tempo is slow, with intense drumming; keyboard harmony, groovy bass lines and electric guitar harmony in the background. The vocalist is singing a dissonant tune along with syncopated music over the melodious and rhythmic background. This is probably karaoke.",
+        "aspect_list": [
+            "male vocalist",
+            "electric guitar riff",
+            "intense drumming",
+            "melodious background music",
+            "rhythmic background drumming",
+            "groovy background bass",
+            "melodious background electric guitar harmony",
+            "dissonant music playing over song",
+            "dissonant keyboard",
+            "karaoke",
+            "amateur singing",
+            "amateur drumming",
+            "chaotic",
+            "off key singing",
+            "not in sync"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/6ragcEJVErI.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male vocalist sings this energetic song. The tempo is fast with a spirited piano accompaniment and ambient street noises like vehicles, people talking and breeze. There is a sound of clapping and cheering indicating that this is a live street performance. The audio quality is inferior causing static and muffled sounds.This song is a cheerful, animated, spirited, happy, chirpy and bouncy pop.",
+        "aspect_list": [
+            "male vocalist",
+            "fast tempo",
+            "piano harmony",
+            "bouncy",
+            "chirpy",
+            "animated",
+            "vivid",
+            "vivacious",
+            "ambient street sounds",
+            "inferior audio quality",
+            "mufffled audio",
+            "catchy riff",
+            "animated singing",
+            "enthusiastic paino",
+            "catchy vocal riff",
+            "clapping",
+            "people talking",
+            "cheering",
+            "vehicle sounds",
+            "live performance",
+            "gig",
+            "concert",
+            "street performance",
+            "busking",
+            "busker"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1KN3GrwhY8c.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This disco song features a male voice singing the main melody. This is accompanied by programmed percussion playing a disco beat. The kick is played at every count of the bar. The synth changes chords after two bars to a higher pitch chord, then after one bar to a higher pitch chord, then after one more bar to a higher pitch chord and finally after one more bar to a suspended fourth chord. The instruments pause for 3 counts of the bar while the voice continues to sing. The bass plays the root notes of the chords. The mood of this song is romantic. This song can be played in a club.",
+        "aspect_list": [
+            "disco song",
+            "male voice",
+            "synth sounds",
+            "programmed percussion",
+            "bass",
+            "moderate tempo",
+            "upbeat",
+            "romantic theme",
+            "dance song"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/5w3s2T0VBug.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The Ambient song features soft shimmering bells, mellow sustained strings, sustained low woodwinds and subtle wooden percussive elements, while there are birds chirping sounds in the background. It sounds relaxing and calming - like something that would put you in a zen mode.",
+        "aspect_list": [
+            "ambient",
+            "relaxing",
+            "calming",
+            "soft shimmering bells",
+            "mellow sustained strings",
+            "sustained low woodwind",
+            "subtle wooden percussive element",
+            "birds chirping"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-FEPOSP7ay0.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features loud bells and metallic squeaking sounds. The recording is mono and noisy.",
+        "aspect_list": [
+            "loud bells impacts",
+            "metallic squeaking sound",
+            "low quality",
+            "mono",
+            "noisy"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2I6pPRWKsCQ.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a live performance of a R&B song that consists of muffled male vocal singing over groovy bass guitar, mellow synth keys melody and energetic drums. There are some crowd noises in the background. The recording is noisy, as it was probably recorded with a phone, but it sounds energetic, passionate and emotional.",
+        "aspect_list": [
+            "low quality",
+            "noisy",
+            "crowd noise",
+            "live performance",
+            "r&b",
+            "energetic drums",
+            "muffled male vocal",
+            "groovy bass",
+            "mellow synth keys melody",
+            "energetic",
+            "passionate",
+            "emotional"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-T4GeTHKtJQ.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a compilation of rock songs and it consists of punchy kicks, wide electric guitar melodies, distorted bass guitar, energetic crash cymbals, shimmering hi hats and harmonizing male vocals singing over it. It sounds energetic.",
+        "aspect_list": [
+            "low quality",
+            "rock",
+            "punchy kick",
+            "punchy kick",
+            "wide electric guitar melodies",
+            "distorted bass guitar",
+            "energetic crash cymbal",
+            "shimmering hi hats",
+            "harmonizing male vocals",
+            "energetic",
+            "compilation"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2kcSUBkFbaQ.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The Low Quality Hip Hop song features a dry, flat male vocal rapping over punchy kick layered with shimmering open hats, punchy kick, simple hi hats, claps, syncopated snare hits, wide arpeggiated synth melody and stuttering synth chords. It sounds energetic and kind of unnatural, since the vocal is so detached from the instrumental due to the bad mixing of the song.",
+        "aspect_list": [
+            "low quality",
+            "dry flat male vocal",
+            "punchy kick",
+            "shimmering open hat",
+            "simple hi hats",
+            "soft crash cymbal",
+            "stuttering synth chords",
+            "wide arpeggiated synth melody",
+            "clapping",
+            "hip hop",
+            "unnatural mix",
+            "energetic"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/5xBfKiQcMZQ.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male vocalist sings this  enthusiastic song. The tempo is fast with infectious drumming, groovy bass lines, funky electric guitar harmony and an energetic keyboard accompaniment with vocal backup. The song is energetic, high-spirited, youthful, infectious, pulsating and vigorous. This song is a popular Alternative Rock.",
+        "aspect_list": [
+            "male vocalist",
+            "fast tempo",
+            "male vocal backup",
+            "cymbals",
+            "bass drum",
+            "bright drumming",
+            "funky keyboard harmony",
+            "groovy electric guitar accompaniment",
+            "funky bass line",
+            "youthful",
+            "spirited",
+            "enthusiastic",
+            "energetic",
+            "lively",
+            "vigorous",
+            "rock",
+            "hard rock",
+            "alternative rock"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2xtOqrNKH5s.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This song is an electronic instrumental. The tempo is fast with booming bass lines, synthesiser arrangement, table turner and digital drums. The music is vibrant, upbeat, pulsating, loud, punchy, buoyant, youthful and has a dance groove. This music is EDM.",
+        "aspect_list": [
+            "instrumental",
+            "fast tempo",
+            "electronic music",
+            "dj",
+            "punchy",
+            "vibrant",
+            "youthful",
+            "buoyant",
+            "spirited",
+            "dance music",
+            "vibrant",
+            "perky",
+            "club music",
+            "punchy bass lines",
+            "synthesiser articulation",
+            "pulsating",
+            "sonic power",
+            "dance music",
+            "edm",
+            "table turner",
+            "drum machine"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0ONdm4sW47c.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a classical music piece that is being performed on the acoustic guitar. The acoustic guitar is being played in a gentle manner. The tune is in major key which gives the piece an optimistic aura. There is a tender atmosphere to the piece. This piece could be playing in the background at a classy restaurant. It could also be used in the soundtrack of a feelgood movie, especially during the scenes in which the characters are finding pleasure in simple things.",
+        "aspect_list": [
+            "classical music",
+            "instrumental",
+            "acoustic guitar",
+            "gentle playing",
+            "tender",
+            "optimistic",
+            "delicate",
+            "major key"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1LA64TXatWk.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This audio contains someone scratching to a backing drumtrack. This song may be playing at home demonstrating an app to someone.",
+        "aspect_list": [
+            "amateur recording",
+            "scratching",
+            "backing drums",
+            "medium tempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0ZNFJz-eZTU.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a jazz song cover that consists of a passionate saxophone melody played over soft hi hats and kick hits, snappy rimshots, smooth bass, organ keys chords and mellow piano chords. It sounds emotional, passionate and reverberant - as it was probably recorded in a medium size room.",
+        "aspect_list": [
+            "snappy rimshots",
+            "soft hi hats",
+            "soft kick",
+            "cover",
+            "smooth bass",
+            "organ keys chords",
+            "mellow piano chords",
+            "passionate saxophone melody",
+            "passionate",
+            "emotional",
+            "jazz",
+            "low quality",
+            "reverberant"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9TkW1M_ZRr0.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a breakbeat piece. There is a groovy electronic drum beat providing the rhythmic structure. A medium pitched pad is playing a repeated theme. There is a synth bass in the background. Occasional string stab hits can be heard. This piece could fit well in the soundtracks of crime movies taking place in the city and car racing video games.",
+        "aspect_list": [
+            "breakbeat",
+            "electronic dance music",
+            "instrumental",
+            "electronic drums",
+            "synth bass",
+            "pad",
+            "strings",
+            "dance",
+            "urban",
+            "hip"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0q-80dzp6PU.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features an electro pop song that consists of an echoing passionate male vocal singing over groovy synth keys chord progression, punchy snare hits, followed by snare roll, wide laser synths and reversed crash riser. It sounds exciting and energetic - like a build up section of the song.",
+        "aspect_list": [
+            "low quality",
+            "electro pop",
+            "punchy snare",
+            "wide laser synth",
+            "snare roll",
+            "echoing passionate male vocal",
+            "groovy synth keys chord progression",
+            "reversed crash riser",
+            "exciting",
+            "energetic",
+            "build up"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0MzrXd8CUCg.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a wide resonating woodwind melody. The recording is loud, noisy with some crackles and it sounds harsh.",
+        "aspect_list": [
+            "wide resonating woodwind melody",
+            "noisy",
+            "audio crackles",
+            "loud",
+            "harsh",
+            "low quality"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-uaTK8sa5Ms.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "An acoustic drum set is playing a 16th note rhythm using the edge of his snare and a hihat sound opening and closing. A banjo is playing a fast melody along with a violin/viola playing the same melody. An upright bass is playing a walking bassline. This song may be playing in a funny tv-show.",
+        "aspect_list": [
+            "country",
+            "banjo",
+            "acoustic piano",
+            "violin",
+            "upright bass",
+            "uptempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/75_dMqpSM4o.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This song features a male voice singing the main melody. The quality of recording is low. The musical instruments are not clearly distinguishable. The voice is accompanied by simple percussion playing in common time. The bass plays a soul type groovy bassline. This song is romantic. This song can be used in a romantic movie.",
+        "aspect_list": [
+            "low quality recording",
+            "male voice",
+            "bassline",
+            "simple percussion",
+            "soul music",
+            "romantic theme",
+            "moderate tempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/4TDtUHo5cSE.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a jazz song that consists of shimmering hi hats and ride cymbals, soft kick and snare hits, groovy walking bass and smooth organ keys melody. It sounds easygoing, groovy and warm - almost like a theme song for some old cartoon.",
+        "aspect_list": [
+            "low quality",
+            "groovy walking bass",
+            "smooth organ keys melody",
+            "shimmering hi hats",
+            "soft snare hits",
+            "groovy drums",
+            "soft kick hits",
+            "shimmering ride cymbal",
+            "jazz",
+            "easygoing",
+            "warm"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9vbsI9xFuo8.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The Alternative/Indie song features a mixed background choir singing over punchy kick and snare hits, energetic cymbals that include crashes and ride hits, followed by groovy bass and strings section melody. The instrumental probably contains more instruments in the background, like a brass section or something orchestral, but due to the low quality mix of the song, it is not audible. Sounds epic and energetic, almost like a final boss theme song for video games.",
+        "aspect_list": [
+            "alternative/indie",
+            "low quality",
+            "epic",
+            "energetic",
+            "mixed background choir",
+            "punchy snare",
+            "punchy kick",
+            "groovy bass",
+            "energetic cymbals",
+            "strings section melody"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7k3M0pQvzhY.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This audio contains someone playing a low didgeridoo while people are talking in the background. The didgeridoo sounds amplified. This song may be playing live at a festival.",
+        "aspect_list": [
+            "amateur recording",
+            "didgeridoo",
+            "background noises",
+            "people talking"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/8r1y_Bz4VfQ.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is an acoustic ballad that is sung in a melancholic manner by two male vocalists and a female vocalist. There is an acoustic guitar in the background playing a simple tune. The tempo and the general atmosphere of the song is relatively calm. The music could be played at a coffee shop in the background.",
+        "aspect_list": [
+            "acoustic guitar",
+            "male vocal",
+            "female vocal",
+            "melancholic",
+            "calming",
+            "downtempo",
+            "mellow"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7KCikXm6hic.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The Folk song features a sustained string, low bass, subtle tinny bells melody and passionately played breathy and reverberant flute melody. There are some foley effects from the flute which could be quieter in the mix. It sounds very traditional, cinematic and cultural.",
+        "aspect_list": [
+            "breathy reverberant passionate flute",
+            "sustained strings",
+            "low bass",
+            "tinny subtle bells melody",
+            "traditional",
+            "folk",
+            "cinematic",
+            "cultural",
+            "flute foley sound effects"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2ZfthfWQowE.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The song is an instrumental. The song is medium fast tempo with African folk drumming rhythm, string section, violins playing, horns and woodwinds playing in harmony. The song is adventurous and exciting.  The song is an advertisement jingle for a DSLR camera complete with camera click tones. The audio is of poor quality.",
+        "aspect_list": [
+            "instrumental music",
+            "african tribal percussions",
+            "medium fast tempo",
+            "string section",
+            "violins playing",
+            "groovy bas slime",
+            "cymbals crashing",
+            "philharmonic orchestra",
+            "energetic",
+            "poor audio quality",
+            "strong drumming rhythm",
+            "horns playing",
+            "conductor",
+            "advertisement jingle",
+            "exciting",
+            "safari adventure",
+            "camera click noises"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/3Gyi7AvDLzc.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A male vocalist sings an animated song. The song is fast tempo with acoustic guitar, mandolin and resonator rhythms, cello accompaniment and vocal backup. The audio quality is inferior and muddled making it almost impossible to understand the lyrics. The melody and instrumentation sounds like Country music.",
+        "aspect_list": [
+            "male singer",
+            "fast tempo",
+            "inaudible",
+            "incoherent vocals",
+            "amateur audio recording",
+            "cello",
+            "mandolin",
+            "resonator",
+            "acoustic guitar",
+            "inferior sound quality",
+            "country music",
+            "muddled",
+            "chaotic",
+            "vocal harmony",
+            "audio"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/0L3vcdzQPPU.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This is a recording of an acapella piece by multiple vocalists. The women sing in a high pitched, whistle-like tone while the men sing in lower tones and harmonise with the women. The melody is rapid and progressive.",
+        "aspect_list": [
+            "acapella",
+            "harmonies",
+            "high pitched melody",
+            "high pitched female whistle tones",
+            "male low pitch tones"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/3kSQNjfJnN8.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The song is an instrumental. The song is slow tempo with a Chinese string instrument playing a lilting melody along with tones of the string instrument being plucked like a harp. The song is emotional and melancholic. The song is a live performance with ambient room noise and generally poor audio quality.",
+        "aspect_list": [
+            "instrumental music",
+            "chinese stringed instrument",
+            "relaxing playlist",
+            "no percussion instruments",
+            "sound searching",
+            "heartfelt",
+            "folk music",
+            "classical music influences",
+            "poor audio quality",
+            "ambient room noises",
+            "slow tempo",
+            "emotional",
+            "passionate",
+            "sad",
+            "melancholic",
+            "poignant",
+            "strings plucked",
+            "live performance",
+            "quiet audience",
+            "harp accompaniment"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/2YQPwRLB1s0.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a jungle track that consists of bouncy snare, soft kick, shimmering shakers, energetic ride cymbal, claps and groovy bass. There are some zipping sound effects, alongside energetic female vocal phrases. It sounds energetic, but yet smooth. Sounds like a soundtrack for a commercial.",
+        "aspect_list": [
+            "low quality",
+            "zipper sound effect",
+            "jungle",
+            "bouncy snare",
+            "shimmering shakers",
+            "groovy bass",
+            "tinny reverberant percussive element",
+            "clapping",
+            "soft kick hits",
+            "energetic ride cymbals",
+            "energetic",
+            "smooth",
+            "energetic female vocal"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/1O4LpU7HggY.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This clip features a male voice narrating about guitars. In the background, an acoustic guitar is strumming chords and picking notes used as fills. The mood of the song is happy and uptempo. There are no other instruments in this song. This song can be played in a romantic mood. This audio can be used in a guitar promotional video.",
+        "aspect_list": [
+            "acoustic gutiar",
+            "male voice",
+            "narration",
+            "moderate tempo",
+            "no percusion",
+            "no other instruments"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/4ufDENm_ECk.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This amateur recording features low quality audio. The audio is of music played from a toy. It is a children's song. A child is singing the main melody. This is accompanied by percussion playing a simple beat. There are other instruments playing fills in between lines. The voice of the instruments is not distinguishable. There is a giggling sound of a girl that is heard in this clip.",
+        "aspect_list": [
+            "amateur recording",
+            "low quality audio",
+            "children's song",
+            "percussion",
+            "giggling sounds"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/9VE1-3q27Qg.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The music excerpt features a sparse melody being played by an electronic sound that has a vibrating reverb effect on. A synth bass accompanies the melody by playing two notes per beat, one being low and the other an octave higher. In the background one can hear sound effects.",
+        "aspect_list": [
+            "electronic sounds",
+            "sound effects",
+            "synth bass"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-mB_XLq6g1g.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This audio contains an acoustic drum playing a groove along with a simple bassline. Trumpets are playing a melody that sounds out of tune and all over the place while a kids voice is streaming and you can hear some aggressive clicking sounds. This song may be playing for a parody video.",
+        "aspect_list": [
+            "amateur recording",
+            "kids voice streaming",
+            "trumpets",
+            "acoustic drums",
+            "e-bass",
+            "out of tune",
+            "parody",
+            "medium to uptempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/90NsBZvepy0.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The low quality recording features a fast camera shuttering sound effects, while the alternative rock instrumental is playing in the background. The Instrumental features a slap snare, tinny kick hits, shimmering hi hats, electric guitar melody and low bass guitar. It sounds almost like a video game background music.",
+        "aspect_list": [
+            "alternative rock",
+            "low quality",
+            "camera fast shuttering sound effects",
+            "electric guitar melody",
+            "low bass guitar",
+            "slap snare",
+            "shimmering hi hats",
+            "tinny kick hits",
+            "repetitive synth bells melody"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/-SWaCArvQug.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "Ambient sound still in the room with a mild background music playing.  A male singer sings a passionate melody with subtle background music. The audio quality is very poor with drawer sliding sound and general noise.",
+        "aspect_list": [
+            "ambient room noise",
+            "instrumental",
+            "male singer",
+            "beep tones",
+            "wind noise",
+            "doorsteps",
+            "noise",
+            "non musical tones",
+            "home improvement video",
+            "unimpressive sounds",
+            "drawer closing",
+            "home video",
+            "passionate singing",
+            "medium tempo"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/5dG1oPahyto.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "The Jazz song features a passionate saxophone melody, followed by an arpeggiated string melody and wide synth pad chords. It sounds passionate, mellow, soft, relaxing and easygoing.",
+        "aspect_list": [
+            "jazz",
+            "passionate saxophone melody",
+            "arpeggiated strings melody",
+            "wide synth pad chords",
+            "passionate",
+            "mellow",
+            "soft",
+            "relaxing",
+            "easygoing"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/5-tx4Fgqetc.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This clip features a didgeridoo being played. The sound it produces is a droning sound alternating with a bass sound. There are no voices in this clip. This is an instrumental clip of only a didgeridoo. There are no other instruments in this song.",
+        "aspect_list": [
+            "didgeridoo music",
+            "droning sound",
+            "no voices",
+            "instrumental",
+            "no melody"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/8rCYRgePG-4.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "A female vocalist sings this spirited Latin Rap. The tempo is medium fast with keyboard harmony , infectious drumming, groovy basslines and digital beats. The song is upbeat, youthful, catchy, energetic, emphatic, melodic and vivacious with a dance groove. This song is a Latin Urbano.",
+        "aspect_list": [
+            "latin song",
+            "female vocals",
+            "hip-hop",
+            "rap",
+            "melodic",
+            "vivacious",
+            "world music",
+            "rapper",
+            "latin urbano",
+            "lively",
+            "spirited",
+            "animated",
+            "groovy dance music",
+            "latin dance music",
+            "latin hip-hop",
+            "youthful",
+            "vibrant",
+            "keyboard harmony",
+            "bright drumming",
+            "groovy bass lines",
+            "rhythmic patter",
+            "latin urba"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/07-vpXo91XM.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "Low fidelity recording of a live concert. The crowd noise is very loud and the audience is screaming. The audio is distorting. Amidst the crowd noise, beat boxing can be heard performing a house music style beat.",
+        "aspect_list": [
+            "live concert",
+            "beatboxing",
+            "house music",
+            "loud crowd",
+            "audience screaming",
+            "low fidelity recording",
+            "audio distorting"
+        ]
+    },
+    {
+        "wav_path": "./musiccaps_audio/7_yBcHaoR0w.wav",
+        "prompt": "Please describe this music in detail and list its aspects.",
+        "ground_truth_caption": "This music is an electric guitar lead instrumental. The tempo is slow with no accompaniment and ambient sounds like a popping and swishing sound. The music is a rhythmic, controlled, pleasant, melancholic, sentimental and emotional Electric guitar solo.",
+        "aspect_list": [
+            "instrumental",
+            "slow tempo",
+            "electric guitar lead",
+            "rock",
+            "hard rock",
+            "metal",
+            "heavy metal",
+            "soft rock",
+            "electric guitar",
+            "external amplification",
+            "ambient sounds",
+            "popping sound",
+            "rustling sound",
+            "electric guitar lead",
+            "vibrations",
+            "resounding"
+        ]
+    }
+]
