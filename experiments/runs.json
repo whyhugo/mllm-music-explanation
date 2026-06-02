@@ -1,0 +1,352 @@
+[
+  {
+    "id": "exp-000",
+    "date": "2026-05-31",
+    "name": "qwen2-audio-lora-broken-audio",
+    "status": "invalid",
+    "description": "First training attempt — audio processing bug: processor kwarg 'audios' ignored (transformers 5.x changed to 'audio'). Model trained on text only, no audio features extracted.",
+    "model": {
+      "base": "Qwen/Qwen2-Audio-7B-Instruct",
+      "lora": { "r": 16, "alpha": 32, "target_modules": ["q_proj","k_proj","v_proj","o_proj"], "dropout": 0.05 },
+      "projector_unfrozen": true
+    },
+    "dataset": {
+      "source": "google/MusicCaps",
+      "total_in_json": 100,
+      "samples_used": 93,
+      "missing_audio": 7
+    },
+    "training": {
+      "epochs": 3,
+      "per_device_batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "effective_batch_size": 8,
+      "learning_rate": 2e-5,
+      "warmup_ratio": 0.03,
+      "lr_scheduler": "cosine",
+      "max_grad_norm": 1.0,
+      "fp16": true,
+      "total_steps": 36,
+      "save_strategy": "steps (save_steps=100, never triggered)"
+    },
+    "loss_curve": [
+      { "step": 10, "epoch": 0.86, "loss": 15.848, "grad_norm": 10.244, "lr": 1.798e-05 },
+      { "step": 20, "epoch": 1.69, "loss": 13.889, "grad_norm": 6.810,  "lr": 1e-05    },
+      { "step": 30, "epoch": 2.52, "loss": 12.904, "grad_norm": 5.635,  "lr": 2.02e-06 }
+    ],
+    "checkpoint": "outputs/qwen_musiccaps_finetuned/checkpoint-36 (overwritten by exp-001)",
+    "evaluation": null,
+    "notes": [
+      "INVALID: audio was not processed during training",
+      "Bug: collator used audios= (transformers 4.x API), ignored in transformers 5.9",
+      "Fix applied: changed to audio= (singular) for exp-001"
+    ]
+  },
+  {
+    "id": "exp-001",
+    "date": "2026-06-01",
+    "name": "qwen2-audio-lora-v1",
+    "status": "completed",
+    "description": "First valid training run. Audio bug fixed (audios→audio). LoRA on q/k/v/o_proj + projector fine-tuned. 93 samples, 3 epochs.",
+    "model": {
+      "base": "Qwen/Qwen2-Audio-7B-Instruct",
+      "lora": { "r": 16, "alpha": 32, "target_modules": ["q_proj","k_proj","v_proj","o_proj"], "dropout": 0.05 },
+      "projector_unfrozen": true,
+      "trainable_params": 16777216,
+      "total_params": 7771656192,
+      "trainable_pct": 0.2159
+    },
+    "dataset": {
+      "source": "google/MusicCaps",
+      "total_in_json": 100,
+      "samples_used": 93,
+      "missing_audio": 7
+    },
+    "training": {
+      "epochs": 3,
+      "per_device_batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "effective_batch_size": 8,
+      "learning_rate": 2e-5,
+      "warmup_ratio": 0.03,
+      "lr_scheduler": "cosine",
+      "max_grad_norm": 1.0,
+      "fp16": true,
+      "total_steps": 36,
+      "save_strategy": "epoch",
+      "runtime_minutes": 30
+    },
+    "loss_curve": [
+      { "step":  5, "epoch": 0.43, "loss":  7.940, "grad_norm": 20.416, "lr": 1.983e-05 },
+      { "step": 10, "epoch": 0.86, "loss": 10.130, "grad_norm": 21.490, "lr": 1.798e-05 },
+      { "step": 15, "epoch": 1.26, "loss":  7.878, "grad_norm": 16.375, "lr": 1.446e-05 },
+      { "step": 20, "epoch": 1.69, "loss":  8.121, "grad_norm": 18.955, "lr": 1e-05    },
+      { "step": 25, "epoch": 2.09, "loss":  7.237, "grad_norm": 16.377, "lr": 5.543e-06 },
+      { "step": 30, "epoch": 2.52, "loss":  7.488, "grad_norm": 16.322, "lr": 2.020e-06 },
+      { "step": 35, "epoch": 2.95, "loss":  7.141, "grad_norm": 17.001, "lr": 1.703e-07 }
+    ],
+    "lora_weights_final": {
+      "lora_B_norm_mean": 0.0292,
+      "lora_A_norm_mean": 2.3114,
+      "projector_norm_mean": 16.5905,
+      "total_lora_keys": 256
+    },
+    "checkpoints": [
+      "outputs/qwen_musiccaps_finetuned/checkpoint-12",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-24",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-36"
+    ],
+    "evaluation": {
+      "eval_checkpoint": "checkpoint-36",
+      "eval_samples": 93,
+      "baseline": {
+        "ROUGE-1": 0.5096,
+        "ROUGE-2": 0.2715,
+        "ROUGE-L": 0.4149,
+        "BLEU":    0.2422,
+        "METEOR":  0.4326
+      },
+      "finetuned": {
+        "ROUGE-1": 0.5802,
+        "ROUGE-2": 0.3633,
+        "ROUGE-L": 0.4828,
+        "BLEU":    0.3185,
+        "METEOR":  0.5051
+      },
+      "improvement_pct": {
+        "ROUGE-1": 13.86,
+        "ROUGE-2": 33.83,
+        "ROUGE-L": 16.36,
+        "BLEU":    31.49,
+        "METEOR":  16.76
+      }
+    },
+    "observations": [
+      "Loss oscillates (7.9→10.1→7.9→8.1→7.2→7.5→7.1) — likely LR too high for 93 samples",
+      "Grad norm consistently high (16–21) — suggests gradient instability",
+      "Despite instability, all metrics improve significantly vs baseline",
+      "BLEU +31.5% and ROUGE-2 +33.8% are strong signals the model learned music vocabulary",
+      "Only 36 total gradient steps — very data-limited"
+    ],
+    "issues": [
+      "LR 2e-5 too high → grad_norm 16–21 instead of <5",
+      "3 epochs insufficient for 93 samples",
+      "No train/val split — overfitting risk unknown"
+    ],
+    "next_experiment": "exp-002"
+  },
+  {
+    "id": "exp-002",
+    "date": "2026-06-01",
+    "name": "qwen2-audio-lora-v2-lower-lr",
+    "status": "completed_eval_pending",
+    "description": "Hyperparameter tuning run: LR halved (2e-5→1e-5), epochs increased (3→5), grad clipping tightened (1.0→0.5), warmup extended (0.03→0.1). Target: reduce loss oscillation and grad norm instability observed in exp-001.",
+    "model": {
+      "base": "Qwen/Qwen2-Audio-7B-Instruct",
+      "lora": { "r": 16, "alpha": 32, "target_modules": ["q_proj","k_proj","v_proj","o_proj"], "dropout": 0.05 },
+      "projector_unfrozen": true,
+      "trainable_params": 16777216,
+      "total_params": 7771656192,
+      "trainable_pct": 0.2159
+    },
+    "dataset": {
+      "source": "google/MusicCaps",
+      "total_in_json": 100,
+      "samples_used": 93,
+      "missing_audio": 7
+    },
+    "training": {
+      "epochs": 5,
+      "per_device_batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "effective_batch_size": 8,
+      "learning_rate": 1e-5,
+      "warmup_ratio": 0.1,
+      "lr_scheduler": "cosine",
+      "max_grad_norm": 0.5,
+      "fp16": true,
+      "total_steps": 60,
+      "save_strategy": "epoch",
+      "runtime_minutes": 17
+    },
+    "loss_curve": [
+      { "step":  5, "epoch": 0.43, "loss":  7.958, "grad_norm": 20.09, "lr": 6.667e-06, "lora_B_rms": 8e-06,  "label_ratio": 0.1168 },
+      { "step": 10, "epoch": 0.86, "loss": 10.181, "grad_norm": 21.02, "lr": 9.924e-06, "lora_B_rms": 2.5e-05,"label_ratio": 0.1065 },
+      { "step": 15, "epoch": 1.26, "loss":  8.235, "grad_norm": 16.81, "lr": 9.468e-06, "lora_B_rms": 3.8e-05,"label_ratio": 0.2131 },
+      { "step": 20, "epoch": 1.69, "loss":  8.607, "grad_norm": 19.69, "lr": 8.637e-06, "lora_B_rms": 5.2e-05,"label_ratio": 0.1764 },
+      { "step": 25, "epoch": 2.09, "loss":  7.730, "grad_norm": 16.49, "lr": 7.500e-06, "lora_B_rms": 6.4e-05,"label_ratio": 0.1168 },
+      { "step": 30, "epoch": 2.52, "loss":  7.920, "grad_norm": 16.22, "lr": 6.153e-06, "lora_B_rms": 7.4e-05,"label_ratio": 0.0773 },
+      { "step": 35, "epoch": 2.95, "loss":  7.588, "grad_norm": 18.10, "lr": 4.709e-06, "lora_B_rms": 8.2e-05,"label_ratio": 0.2022 },
+      { "step": 40, "epoch": 3.34, "loss":  7.813, "grad_norm": 15.13, "lr": 3.290e-06, "lora_B_rms": 8.7e-05,"label_ratio": 0.1818 },
+      { "step": 45, "epoch": 3.77, "loss":  7.140, "grad_norm": 16.62, "lr": 2.014e-06, "lora_B_rms": 9.1e-05,"label_ratio": 0.1353 },
+      { "step": 50, "epoch": 4.17, "loss":  7.780, "grad_norm": 17.37, "lr": 9.894e-07, "lora_B_rms": 9.3e-05,"label_ratio": 0.1325 },
+      { "step": 55, "epoch": 4.60, "loss":  8.293, "grad_norm": 17.23, "lr": 3.015e-07, "lora_B_rms": 9.4e-05,"label_ratio": 0.1579 },
+      { "step": 60, "epoch": 5.00, "loss":  6.659, "grad_norm": 16.58, "lr": 8.459e-09, "lora_B_rms": 9.4e-05,"label_ratio": 0.1978 }
+    ],
+    "lora_weights_final": {
+      "lora_B_rms": 9.4e-05,
+      "lora_A_rms": 0.009028,
+      "projector_rms": 0.01391,
+      "lora_B_growth_ratio": 11.75,
+      "comment": "lora_B grew 11.75× over training (8e-6→9.4e-5); projector_rms constant (fp16 precision limit or very slow update)"
+    },
+    "checkpoints": [
+      "outputs/qwen_musiccaps_finetuned/checkpoint-12",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-24",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-36",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-48",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-60"
+    ],
+    "evaluation": {
+      "eval_checkpoint": "checkpoint-60",
+      "eval_samples": 93,
+      "baseline": {
+        "ROUGE-1": 0.5096,
+        "ROUGE-2": 0.2715,
+        "ROUGE-L": 0.4149,
+        "BLEU":    0.2422,
+        "METEOR":  0.4326
+      },
+      "finetuned": {
+        "ROUGE-1": 0.5853,
+        "ROUGE-2": 0.3563,
+        "ROUGE-L": 0.4770,
+        "BLEU":    0.3095,
+        "METEOR":  0.4968
+      },
+      "improvement_pct": {
+        "ROUGE-1": 14.85,
+        "ROUGE-2": 31.23,
+        "ROUGE-L": 14.97,
+        "BLEU":    27.79,
+        "METEOR":  14.84
+      },
+      "vs_exp001_pct": {
+        "ROUGE-1": 0.88,
+        "ROUGE-2": -1.93,
+        "ROUGE-L": -1.20,
+        "BLEU":    -2.83,
+        "METEOR":  -1.64
+      }
+    },
+    "observations": [
+      "Loss still oscillates (range 6.7–10.2) despite LR halved — oscillation is structural, caused by tiny dataset (93 samples → high gradient variance per step)",
+      "grad_norm unchanged (15–21) even with max_grad_norm=0.5 — logged norm is PRE-clip value; clipping IS happening but landscape is inherently noisy",
+      "lora_B_rms grew 11.75× (8e-6 → 9.4e-5), stronger adaptation than exp-001 (which reached 0.0292 absolute norm after 36 steps)",
+      "projector_rms constant at 0.01391 throughout — likely fp16 precision masking tiny updates, not frozen",
+      "label_ratio 0.07–0.21 per batch — healthy range, masking logic working correctly",
+      "avg_loss=7.992 vs exp-001 last-step=7.14: comparable; final step loss 6.659 is best single-step value so far",
+      "Runtime 17 min (60 steps) vs exp-001 30 min (36 steps) — faster per step due to model weights already cached"
+    ],
+    "issues": [
+      "Grad norm instability is structural (tiny dataset) — cannot be fixed by LR alone",
+      "Loss plateau around 7–8 suggests model has extracted most signal from 93 samples",
+      "projector update signal unclear — consider logging pre/post epoch diff instead of RMS",
+      "warmup_ratio deprecation warning (transformers 5.x) — change to warmup_steps"
+    ],
+    "next_experiment": "exp-003"
+  },
+  {
+    "id": "exp-003",
+    "date": "2026-06-02",
+    "name": "qwen2-audio-lora-v3-more-data",
+    "status": "completed",
+    "description": "5× more training data (93→503 samples). Same hyperparams as exp-002 (LR=1e-5, 5 epochs, grad_clip=0.5). First run to show clear per-epoch loss decline.",
+    "model": {
+      "base": "Qwen/Qwen2-Audio-7B-Instruct",
+      "lora": { "r": 16, "alpha": 32, "target_modules": ["q_proj","k_proj","v_proj","o_proj"], "dropout": 0.05 },
+      "projector_unfrozen": true,
+      "trainable_params": 16777216,
+      "total_params": 7771656192,
+      "trainable_pct": 0.2159
+    },
+    "dataset": {
+      "source": "google/MusicCaps",
+      "total_in_json": 503,
+      "samples_used": 503,
+      "note": "downloaded with new parallel downloader (3 workers)"
+    },
+    "training": {
+      "epochs": 5,
+      "per_device_batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "effective_batch_size": 8,
+      "learning_rate": 1e-5,
+      "warmup_steps": 6,
+      "warmup_pct_of_total": 1.9,
+      "lr_scheduler": "cosine",
+      "max_grad_norm": 0.5,
+      "fp16": true,
+      "total_steps": 315,
+      "steps_per_epoch": 63,
+      "save_strategy": "epoch"
+    },
+    "loss_curve_by_epoch": [
+      { "epoch": 1, "steps": "5-63",    "avg_loss": 9.033 },
+      { "epoch": 2, "steps": "65-125",  "avg_loss": 8.261 },
+      { "epoch": 3, "steps": "130-190", "avg_loss": 7.741 },
+      { "epoch": 4, "steps": "195-250", "avg_loss": 7.437 },
+      { "epoch": 5, "steps": "255-315", "avg_loss": 7.256 }
+    ],
+    "loss_summary": {
+      "first_step": 8.462,
+      "last_step":  6.369,
+      "min_step":   6.072,
+      "avg_all":    7.931,
+      "epoch_delta": -1.777,
+      "grad_norm_range": [16.17, 28.66]
+    },
+    "checkpoints": [
+      "outputs/qwen_musiccaps_finetuned/checkpoint-63",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-126",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-189",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-252",
+      "outputs/qwen_musiccaps_finetuned/checkpoint-315"
+    ],
+    "evaluation": {
+      "note": "Fair comparison: all three files evaluated on the SAME 500-sample set.",
+      "eval_set_n": 500,
+      "baseline": {
+        "ROUGE-1": 0.5136, "ROUGE-2": 0.2723, "ROUGE-L": 0.4113, "BLEU": 0.2227, "METEOR": 0.4158,
+        "n_samples": 500, "file": "outputs/eval_baseline_500.json"
+      },
+      "ep3_finetuned": {
+        "ROUGE-1": 0.5831, "ROUGE-2": 0.3608, "ROUGE-L": 0.4875, "BLEU": 0.3002, "METEOR": 0.4902,
+        "n_samples": 500, "checkpoint": "checkpoint-189", "file": "outputs/eval_exp003_ep3.json"
+      },
+      "ep5_finetuned": {
+        "ROUGE-1": 0.5896, "ROUGE-2": 0.3715, "ROUGE-L": 0.4962, "BLEU": 0.3084, "METEOR": 0.4964,
+        "n_samples": 499, "checkpoint": "checkpoint-315", "file": "outputs/eval_exp003_ep5.json"
+      },
+      "ep3_vs_base500_pct": {
+        "ROUGE-1": 13.53, "ROUGE-2": 32.50, "ROUGE-L": 18.53, "BLEU": 34.80, "METEOR": 17.89
+      },
+      "ep5_vs_base500_pct": {
+        "ROUGE-1": 14.80, "ROUGE-2": 36.43, "ROUGE-L": 20.64, "BLEU": 38.48, "METEOR": 19.38
+      },
+      "ep5_vs_ep3_pct": {
+        "ROUGE-1": 1.11, "ROUGE-2": 2.97, "ROUGE-L": 1.78, "BLEU": 2.73, "METEOR": 1.26
+      },
+      "avg_improvement_vs_base500": { "ep3": 23.45, "ep5": 25.95 },
+      "finetuned": {
+        "ROUGE-1": 0.5896, "ROUGE-2": 0.3715, "ROUGE-L": 0.4962, "BLEU": 0.3084, "METEOR": 0.4964
+      },
+      "improvement_pct": {
+        "ROUGE-1": 14.80, "ROUGE-2": 36.43, "ROUGE-L": 20.64, "BLEU": 38.48, "METEOR": 19.38
+      }
+    },
+    "observations": [
+      "FIRST run with clear per-epoch loss decline: 9.03→8.26→7.74→7.44→7.26 (Δ=-1.78)",
+      "Loss still declining at epoch 5 — not converged, more epochs likely beneficial",
+      "grad_norm increased in later epochs (16→28) — possible sign of harder samples or mild overfitting",
+      "warmup_steps=6 is only 1.9% of 315 total steps (should be ~31 for 10% warmup with this dataset size)",
+      "Higher initial loss (9.03 vs 7.9 in exp-001/002) expected: more diverse data = harder initial task"
+    ],
+    "issues": [
+      "warmup_steps=6 too short for 315-step run — fix to warmup_steps=31 for exp-004",
+      "output_dir shared across all experiments — checkpoint numbering collision risk",
+      "grad_norm increasing in later epochs — monitor overfitting with val split"
+    ],
+    "next_experiment": "exp-004"
+  }
+]

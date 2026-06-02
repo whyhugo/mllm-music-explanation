@@ -1,0 +1,57 @@
+# ── Large model checkpoints (up to 16 GB per checkpoint) ──────────────────
+outputs/
+
+# ── Downloaded audio clips ─────────────────────────────────────────────────
+musiccaps_audio/
+
+# ── Model weight files (binary, too large for git) ────────────────────────
+*.safetensors
+*.bin
+*.pt
+*.pth
+# Exception: keep adapter_config.json and small PEFT configs if ever needed
+!adapter_config.json
+
+# ── SALMONN — nested git repo treated as plain directory ──────────────────
+salmonn/SALMONN/.git/
+
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# ── Jupyter ───────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Environment / secrets ─────────────────────────────────────────────────
+.env
+.env.*
+*.env
+
+# ── IDE ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ── HuggingFace / Torch cache artefacts ───────────────────────────────────
+*.lock
+wandb/
+
+# ── Eval output JSONs (large result files, regenerate with evaluate_qwen.py)
+outputs/eval_*.json
+# Keep: experiments/runs.json  data/*.json  musiccaps_processed.json
+
+# ── Third-party model repos (download separately — see README) ────────────
+salmonn/SALMONN/
+vicuna-13b-v1.1/
+whisper-large-v2/
