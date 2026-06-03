@@ -553,5 +553,64 @@
       "Fix: retrain exp-005b with corrected callback for 5 epochs (≈38 min)"
     ],
     "next_experiment": "exp-005b"
+  },
+  {
+    "id": "exp-005b",
+    "date": "2026-06-03",
+    "name": "qwen2-audio-lora-v5b-best-val-fixed",
+    "status": "completed",
+    "description": "Re-run of exp-005 with fixed BestValCheckpointCallback (on_save approach) and save_total_limit=None. 5 epochs to confirm ep3 optimal. First run with correct held-out evaluation.",
+    "model": {
+      "base": "Qwen/Qwen2-Audio-7B-Instruct",
+      "lora": { "r": 16, "alpha": 32, "target_modules": ["q_proj","k_proj","v_proj","o_proj"], "dropout": 0.05 },
+      "projector_unfrozen": true
+    },
+    "dataset": {
+      "train": "data/train.json (1054 samples, updated after more downloads)",
+      "val": "data/val.json (117 samples, held-out)"
+    },
+    "training": {
+      "epochs": 5,
+      "learning_rate": 1e-5,
+      "max_grad_norm": 0.5,
+      "fp16": true,
+      "save_total_limit": null,
+      "eval_strategy": "epoch"
+    },
+    "best_checkpoint": {
+      "path": "outputs/qwen_musiccaps_finetuned/checkpoint-best",
+      "epoch": 3,
+      "step": 366,
+      "val_loss": 1.1125
+    },
+    "evaluation": {
+      "eval_set": "data/val.json (117 samples, true held-out)",
+      "eval_set_n": 117,
+      "note": "HONEST out-of-sample evaluation — model never trained on these 117 samples",
+      "baseline": {
+        "ROUGE-1": 0.5136, "ROUGE-2": 0.2723, "ROUGE-L": 0.4113, "BLEU": 0.2227, "METEOR": 0.4158
+      },
+      "finetuned": {
+        "ROUGE-1": 0.5875, "ROUGE-2": 0.3601, "ROUGE-L": 0.4828, "BLEU": 0.3066, "METEOR": 0.4924,
+        "avg_gen_len_words": 48.2
+      },
+      "improvement_pct": {
+        "ROUGE-1": 14.39, "ROUGE-2": 32.24, "ROUGE-L": 17.38, "BLEU": 37.67, "METEOR": 18.42
+      },
+      "avg_improvement_vs_baseline": 24.02,
+      "vs_exp004_in_sample_pct": {
+        "ROUGE-1": -12.54, "ROUGE-2": -25.17, "ROUGE-L": -17.75, "BLEU": -25.69, "METEOR": -17.06,
+        "note": "Expected: held-out metrics are lower than in-sample. Gap reveals degree of overfitting in exp-004."
+      }
+    },
+    "observations": [
+      "HONEST result: +24.02% avg improvement vs baseline (vs exp-004's inflated +55.65% in-sample)",
+      "exp-004 vs exp-005b gap (~25%) quantifies how much exp-004 overfit to its training data",
+      "Best epoch confirmed at ep3 (consistent with exp-005: ep3 had lowest val_loss=1.1014/1.1125)",
+      "BestValCheckpointCallback fixed: on_save correctly saves checkpoint-best/ adapter",
+      "Data ceiling hit: 1171 MusicCaps clips is the YouTube availability limit (~21% of total)",
+      "1054 train samples saturates at ~ep3; need ~3000 train samples to push to ep10"
+    ],
+    "next_experiment": "exp-006"
   }
 ]
