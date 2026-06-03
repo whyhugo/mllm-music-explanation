@@ -469,5 +469,89 @@
       "Grad norm increasing trend (16→38) suggests may benefit from lower max_grad_norm=0.3"
     ],
     "next_experiment": "exp-005"
+  },
+  {
+    "id": "exp-005",
+    "date": "2026-06-03",
+    "name": "qwen2-audio-lora-v5-val-split",
+    "status": "completed_checkpoint_lost",
+    "description": "First run with proper 900/100 train-val split. OOM fixed (expandable_segments + ClearCacheBeforeEvalCallback + eval_accumulation_steps). Val monitoring revealed clear overfitting from epoch 4. Best checkpoint (ep3, step 339) was rotated out by save_total_limit=3.",
+    "model": {
+      "base": "Qwen/Qwen2-Audio-7B-Instruct",
+      "lora": { "r": 16, "alpha": 32, "target_modules": ["q_proj","k_proj","v_proj","o_proj"], "dropout": 0.05 },
+      "projector_unfrozen": true
+    },
+    "dataset": {
+      "train": "data/train.json (900 samples)",
+      "val":   "data/val.json  (100 samples, held-out)"
+    },
+    "training": {
+      "epochs": 15,
+      "per_device_batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "effective_batch_size": 8,
+      "learning_rate": 1e-5,
+      "warmup_steps": 169,
+      "lr_scheduler": "cosine",
+      "max_grad_norm": 0.5,
+      "fp16": true,
+      "total_steps": 1695,
+      "steps_per_epoch": 113,
+      "save_strategy": "epoch",
+      "save_total_limit": 3,
+      "eval_strategy": "epoch",
+      "runtime_hours": 2.5
+    },
+    "val_loss_history": [
+      {"epoch":1,  "step":113,  "val_loss":1.1395},
+      {"epoch":2,  "step":226,  "val_loss":1.1098},
+      {"epoch":3,  "step":339,  "val_loss":1.1014, "note":"BEST"},
+      {"epoch":4,  "step":452,  "val_loss":1.1153},
+      {"epoch":5,  "step":565,  "val_loss":1.1323},
+      {"epoch":6,  "step":678,  "val_loss":1.1530},
+      {"epoch":7,  "step":791,  "val_loss":1.1790},
+      {"epoch":8,  "step":904,  "val_loss":1.2045},
+      {"epoch":9,  "step":1017, "val_loss":1.2379},
+      {"epoch":10, "step":1130, "val_loss":1.2638},
+      {"epoch":11, "step":1243, "val_loss":1.2913},
+      {"epoch":12, "step":1356, "val_loss":1.3075},
+      {"epoch":13, "step":1469, "val_loss":1.3159},
+      {"epoch":14, "step":1582, "val_loss":1.3215},
+      {"epoch":15, "step":1695, "val_loss":1.3221}
+    ],
+    "loss_summary": {
+      "best_val_loss": 1.1014,
+      "best_epoch": 3,
+      "best_step": 339,
+      "final_val_loss": 1.3221,
+      "overfit_degradation_pct": 20.0,
+      "overfitting_starts": "epoch 4",
+      "avg_train_loss": 5.579
+    },
+    "checkpoints": {
+      "available": ["checkpoint-1469", "checkpoint-1582", "checkpoint-1695"],
+      "rotated_out": ["checkpoint-339 (BEST, ep3)", "checkpoint-452..1356"],
+      "note": "save_total_limit=3 rotated out the best checkpoint"
+    },
+    "bugs_fixed": [
+      "BestValCheckpointCallback.on_save approach needed (on_evaluate doesn't reliably receive model kwarg in transformers 5.x)",
+      "save_total_limit=3 should be None or larger to retain checkpoint-best"
+    ],
+    "evaluation": null,
+    "observations": [
+      "KEY FINDING: clear overfitting from epoch 4 — val loss monotonically increases ep4→ep15",
+      "Val loss: best=1.1014 (ep3) → final=1.3221 (ep15), degradation +20.0%",
+      "900 training samples saturated at ~2700 effective sample-exposures (3 epochs)",
+      "To push optimal epoch to 10: need ~3000 train samples; to ep15: ~4500",
+      "BestValCheckpointCallback failed to save: model kwarg not passed in on_evaluate in transformers 5.x",
+      "OOM fixes successful: training ran cleanly at 4.15s/step, 22.3 GB peak VRAM"
+    ],
+    "issues": [
+      "Best checkpoint (ep3, step 339) lost due to save_total_limit=3 rotation",
+      "Fix: use on_save instead of on_evaluate in BestValCheckpointCallback",
+      "Fix: set save_total_limit=None or keep checkpoint-best exempt from rotation",
+      "Fix: retrain exp-005b with corrected callback for 5 epochs (≈38 min)"
+    ],
+    "next_experiment": "exp-005b"
   }
 ]

@@ -47,7 +47,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ── Experiment ID ────────────────────────────────────────────────────────────
 # Change this before each new run so TensorBoard shows a readable label.
 # Convention: exp-001, exp-002, ...  or  exp-005-r16-lr1e5  for ablations.
-EXP_ID = "exp-005"
+EXP_ID = "exp-005b"
 
 # Set to a local directory if you have pre-downloaded weights, e.g.:
 #   MODEL_ID = "/datas/store163/whyhugo/Qwen2-Audio-7B-Instruct"
@@ -324,52 +324,70 @@ class BestValCheckpointCallback(TrainerCallback):
     Saves the LoRA adapter + projector to checkpoint-best/ whenever
     eval/loss reaches a new minimum.
 
-    Why not load_best_model_at_end=True?
-      device_map="auto" is incompatible with that flag. Instead, this
-      callback maintains a lightweight "checkpoint-best/" directory that
-      always holds the adapter with the lowest observed eval/loss — even
-      if the corresponding full checkpoint has been rotated out by
-      save_total_limit.
+    Design note — why on_save instead of on_evaluate:
+      In transformers 5.x, on_evaluate does NOT reliably receive the
+      `model` kwarg (trainer may call it without passing model depending
+      on version). on_save always receives model, and with eval_strategy=
+      "epoch" + save_strategy="epoch", the save fires right after eval
+      in the same epoch-end block.
 
-    After training, evaluate with:
-        python qwen/evaluate_qwen.py --lora_path outputs/.../checkpoint-best
+    Flow per epoch:
+      1. Eval runs  →  on_evaluate records val_loss, sets _pending_save=True
+      2. Save fires →  on_save sees _pending_save, copies adapter to checkpoint-best/
+
+    save_total_limit note:
+      checkpoint-best/ is a SEPARATE directory not managed by save_total_limit,
+      so the best adapter is never rotated out even if full checkpoints are.
     """
 
     def __init__(self):
-        self.best_val_loss = float("inf")
-        self.best_step     = -1
-        self.history: list = []   # [(epoch, step, val_loss)]
+        self.best_val_loss  = float("inf")
+        self.best_step      = -1
+        self.history: list  = []          # [(epoch, step, val_loss)]
+        self._pending_save  = False       # flag: on_save should copy to checkpoint-best
+        self._pending_meta  = {}
 
-    def on_evaluate(self, args, state, control, model=None, metrics=None, **kwargs):
+    def on_evaluate(self, args, state, control, metrics=None, **kwargs):
         val_loss = (metrics or {}).get("eval_loss", float("inf"))
         self.history.append((round(state.epoch, 2), state.global_step, round(val_loss, 4)))
 
         if val_loss < self.best_val_loss:
             self.best_val_loss = val_loss
             self.best_step     = state.global_step
-            best_dir = os.path.join(args.output_dir, "checkpoint-best")
-            os.makedirs(best_dir, exist_ok=True)
-
-            if model is not None:
-                if hasattr(model, "language_model"):
-                    model.language_model.save_pretrained(best_dir)
-                if hasattr(model, "multi_modal_projector"):
-                    torch.save(model.multi_modal_projector.state_dict(),
-                               os.path.join(best_dir, "projector_weights.pt"))
-
-            import json as _json
-            with open(os.path.join(best_dir, "best_info.json"), "w") as f:
-                _json.dump({"step": state.global_step,
-                            "epoch": round(state.epoch, 2),
-                            "val_loss": round(val_loss, 4)}, f, indent=2)
-
+            self._pending_save = True
+            self._pending_meta = {"step": state.global_step,
+                                  "epoch": round(state.epoch, 2),
+                                  "val_loss": round(val_loss, 4)}
             print(f"\n[BestVal] ✓ New best  val_loss={val_loss:.4f}  "
-                  f"(ep {state.epoch:.1f} step {state.global_step})")
-            print(f"[BestVal]   Saved adapter → {best_dir}")
+                  f"ep={state.epoch:.1f}  step={state.global_step}"
+                  f"  (will save adapter on next on_save)")
         else:
             gap = val_loss - self.best_val_loss
             print(f"\n[BestVal]   val_loss={val_loss:.4f}  "
-                  f"(best={self.best_val_loss:.4f} @ step {self.best_step},  Δ=+{gap:.4f})")
+                  f"(best={self.best_val_loss:.4f} @ step {self.best_step}  Δ=+{gap:.4f})")
+
+    def on_save(self, args, state, control, model=None, **kwargs):
+        """Fires right after eval in epoch-end block → model is always available."""
+        if not self._pending_save or model is None:
+            return control
+
+        best_dir = os.path.join(args.output_dir, "checkpoint-best")
+        os.makedirs(best_dir, exist_ok=True)
+
+        # Save lightweight LoRA adapter (NOT the full frozen model)
+        if hasattr(model, "language_model"):
+            model.language_model.save_pretrained(best_dir)
+        if hasattr(model, "multi_modal_projector"):
+            torch.save(model.multi_modal_projector.state_dict(),
+                       os.path.join(best_dir, "projector_weights.pt"))
+
+        with open(os.path.join(best_dir, "best_info.json"), "w") as f:
+            json.dump(self._pending_meta, f, indent=2)
+
+        print(f"[BestVal]   Adapter saved → {best_dir}  "
+              f"(val_loss={self._pending_meta['val_loss']:.4f})")
+        self._pending_save = False
+        return control
 
     def on_train_end(self, args, state, control, **kwargs):
         best_dir = os.path.join(args.output_dir, "checkpoint-best")
@@ -377,9 +395,9 @@ class BestValCheckpointCallback(TrainerCallback):
         print(f"[BestVal] Val loss history (epoch, step, val_loss):")
         for ep, step, loss in self.history:
             marker = " ←best" if step == self.best_step else ""
-            print(f"            ep{ep:>4}  step{step:>5}  loss={loss:.4f}{marker}")
-        print(f"[BestVal] Best checkpoint: {best_dir}")
-        print(f"[BestVal] Evaluate: python qwen/evaluate_qwen.py "
+            print(f"            ep{ep:>5.1f}  step{step:>5}  loss={loss:.4f}{marker}")
+        print(f"[BestVal] Best checkpoint : {best_dir}")
+        print(f"[BestVal] Evaluate        : python qwen/evaluate_qwen.py "
               f"--lora_path {best_dir}")
         print(f"{'='*65}\n")
 
@@ -482,16 +500,14 @@ def main():
     else:
         print(f"  Train: {len(train_dataset)} samples  |  No val split found (run: python data/split.py)")
 
-    # ── exp-005 config ──────────────────────────────────────────────────────
-    # Key changes from exp-004:
-    #   data   : data/train.json (900) + data/val.json (100) — first proper split
-    #   epochs : 10 → 15  (exp-004 still declining at ep10; val curve guides real stop)
-    #   best   : BestValCheckpointCallback saves checkpoint-best/ automatically
-    #   warmup : dynamically computed (≈10% of total steps)
-    #   memory : batch=1 stays the same; more epochs ≠ more peak memory
-    # Unchanged: LR=1e-5, grad_clip=0.5, LoRA r=16
+    # ── exp-005b config ─────────────────────────────────────────────────────
+    # Fixes over exp-005:
+    #   BestValCallback: on_save approach (model always available, unlike on_evaluate)
+    #   save_total_limit: None → keep ALL checkpoints (so ep3 best is never rotated)
+    #   epochs: 5 (exp-005 showed optimal at ep3; ep4 already overfit, 5 gives margin)
+    # Unchanged: data split (900/100), LR=1e-5, grad_clip=0.5, LoRA r=16
     # ─────────────────────────────────────────────────────────────────────────
-    NUM_EPOCHS  = 15
+    NUM_EPOCHS  = 5
     total_steps = (len(train_dataset) // 8) * NUM_EPOCHS
     warmup      = max(10, round(total_steps * 0.10))
     print(f"Config: total_steps≈{total_steps}  warmup={warmup}  exp={EXP_ID}")
@@ -510,7 +526,7 @@ def main():
         fp16=True,
         # ── Checkpointing ────────────────────────────────────────────────────
         save_strategy="epoch",
-        save_total_limit=3,                   # keep only last 3 checkpoints → saves disk
+        save_total_limit=None,                # keep ALL checkpoints (best ep may be early)
         # ── Evaluation ───────────────────────────────────────────────────────
         eval_strategy="epoch" if val_dataset else "no",
         per_device_eval_batch_size=1,         # explicit; one val sample at a time
