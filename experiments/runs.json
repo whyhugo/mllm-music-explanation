@@ -353,7 +353,7 @@
     "id": "exp-004",
     "date": "2026-06-02",
     "name": "qwen2-audio-lora-v4-10ep-1k",
-    "status": "completed_eval_pending",
+    "status": "completed",
     "description": "2× more data (503→1003 samples) + double epochs (5→10). First run to reach loss < 5.5. Strong monotone per-epoch improvement throughout all 10 epochs.",
     "model": {
       "base": "Qwen/Qwen2-Audio-7B-Instruct",
@@ -422,7 +422,39 @@
       "outputs/qwen_musiccaps_finetuned/checkpoint-1125",
       "outputs/qwen_musiccaps_finetuned/checkpoint-1250"
     ],
-    "evaluation": null,
+    "evaluation": {
+      "note": "⚠ exp-004 trained on ALL 1003 samples — val set is IN-SAMPLE. First honest held-out test will be exp-005.",
+      "eval_set_n": 1000,
+      "baseline_ref": "base500 (500 samples): ROUGE-1=0.5136, BLEU=0.2227",
+      "ep7_finetuned": {
+        "checkpoint": "checkpoint-875", "n_samples": 1000,
+        "ROUGE-1": 0.6658, "ROUGE-2": 0.4731, "ROUGE-L": 0.5792, "BLEU": 0.4049, "METEOR": 0.5869
+      },
+      "ep10_finetuned": {
+        "checkpoint": "checkpoint-1250", "n_samples": 1000,
+        "ROUGE-1": 0.6717, "ROUGE-2": 0.4812, "ROUGE-L": 0.5870, "BLEU": 0.4126, "METEOR": 0.5937
+      },
+      "ep10_train_subset": {
+        "n": 900, "ROUGE-1": 0.6726, "ROUGE-2": 0.4813, "ROUGE-L": 0.5871, "BLEU": 0.4115, "METEOR": 0.5933
+      },
+      "ep10_val_subset_in_sample": {
+        "n": 100, "ROUGE-1": 0.6637, "ROUGE-2": 0.4799, "ROUGE-L": 0.5860, "BLEU": 0.4227, "METEOR": 0.5975,
+        "note": "val samples were in training set for exp-004"
+      },
+      "ep10_vs_ep7_pct": {
+        "ROUGE-1": 0.89, "ROUGE-2": 1.71, "ROUGE-L": 1.35, "BLEU": 1.90, "METEOR": 1.16
+      },
+      "ep10_vs_base500_pct": {
+        "ROUGE-1": 30.78, "ROUGE-2": 76.72, "ROUGE-L": 42.71, "BLEU": 85.26, "METEOR": 42.78
+      },
+      "avg_improvement_vs_base500": { "ep7": 53.43, "ep10": 55.65 },
+      "finetuned": {
+        "ROUGE-1": 0.6717, "ROUGE-2": 0.4812, "ROUGE-L": 0.5870, "BLEU": 0.4126, "METEOR": 0.5937
+      },
+      "improvement_pct": {
+        "ROUGE-1": 30.78, "ROUGE-2": 76.72, "ROUGE-L": 42.71, "BLEU": 85.26, "METEOR": 42.78
+      }
+    },
     "observations": [
       "Monotone loss decline across all 10 epochs: 9.06→5.39 (Δ=-3.68) — strongest training signal so far",
       "Loss still declining at ep10 (5.48→5.39), but slowing (Δ=-0.10 vs ep9-10) — approaching convergence",

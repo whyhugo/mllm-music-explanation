@@ -53,9 +53,11 @@ def print_metrics_table(runs):
     print(header)
     print("-" * len(header))
 
-    # Baseline row — prefer the most recent / largest eval set
-    base_run   = max(completed, key=lambda r: r["evaluation"].get("eval_set_n", 0))
-    base       = base_run["evaluation"]["baseline"]
+    # Baseline row — prefer the most recent run that has a standalone baseline dict
+    runs_with_base = [r for r in completed if "baseline" in r.get("evaluation", {})]
+    base_run   = max(runs_with_base, key=lambda r: r["evaluation"].get("eval_set_n", 0)) \
+                 if runs_with_base else completed[0]
+    base       = base_run["evaluation"].get("baseline", {})
     base_n     = base_run["evaluation"].get("eval_set_n", "?")
     row = f"{'baseline':<{id_w}} {f'Qwen2-Audio-7B base (n={base_n})':<28}"
     for m in METRICS:
