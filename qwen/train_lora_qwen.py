@@ -284,7 +284,75 @@ class LoraMetricsCallback(TrainerCallback):
 
 
 # =====================================================================
-# 3b. Callback: save PEFT adapter alongside every Trainer checkpoint
+# 3b. Callback: track best val/loss and save best adapter
+# =====================================================================
+class BestValCheckpointCallback(TrainerCallback):
+    """
+    Saves the LoRA adapter + projector to checkpoint-best/ whenever
+    eval/loss reaches a new minimum.
+
+    Why not load_best_model_at_end=True?
+      device_map="auto" is incompatible with that flag. Instead, this
+      callback maintains a lightweight "checkpoint-best/" directory that
+      always holds the adapter with the lowest observed eval/loss — even
+      if the corresponding full checkpoint has been rotated out by
+      save_total_limit.
+
+    After training, evaluate with:
+        python qwen/evaluate_qwen.py --lora_path outputs/.../checkpoint-best
+    """
+
+    def __init__(self):
+        self.best_val_loss = float("inf")
+        self.best_step     = -1
+        self.history: list = []   # [(epoch, step, val_loss)]
+
+    def on_evaluate(self, args, state, control, model=None, metrics=None, **kwargs):
+        val_loss = (metrics or {}).get("eval_loss", float("inf"))
+        self.history.append((round(state.epoch, 2), state.global_step, round(val_loss, 4)))
+
+        if val_loss < self.best_val_loss:
+            self.best_val_loss = val_loss
+            self.best_step     = state.global_step
+            best_dir = os.path.join(args.output_dir, "checkpoint-best")
+            os.makedirs(best_dir, exist_ok=True)
+
+            if model is not None:
+                if hasattr(model, "language_model"):
+                    model.language_model.save_pretrained(best_dir)
+                if hasattr(model, "multi_modal_projector"):
+                    torch.save(model.multi_modal_projector.state_dict(),
+                               os.path.join(best_dir, "projector_weights.pt"))
+
+            import json as _json
+            with open(os.path.join(best_dir, "best_info.json"), "w") as f:
+                _json.dump({"step": state.global_step,
+                            "epoch": round(state.epoch, 2),
+                            "val_loss": round(val_loss, 4)}, f, indent=2)
+
+            print(f"\n[BestVal] ✓ New best  val_loss={val_loss:.4f}  "
+                  f"(ep {state.epoch:.1f} step {state.global_step})")
+            print(f"[BestVal]   Saved adapter → {best_dir}")
+        else:
+            gap = val_loss - self.best_val_loss
+            print(f"\n[BestVal]   val_loss={val_loss:.4f}  "
+                  f"(best={self.best_val_loss:.4f} @ step {self.best_step},  Δ=+{gap:.4f})")
+
+    def on_train_end(self, args, state, control, **kwargs):
+        best_dir = os.path.join(args.output_dir, "checkpoint-best")
+        print(f"\n{'='*65}")
+        print(f"[BestVal] Val loss history (epoch, step, val_loss):")
+        for ep, step, loss in self.history:
+            marker = " ←best" if step == self.best_step else ""
+            print(f"            ep{ep:>4}  step{step:>5}  loss={loss:.4f}{marker}")
+        print(f"[BestVal] Best checkpoint: {best_dir}")
+        print(f"[BestVal] Evaluate: python qwen/evaluate_qwen.py "
+              f"--lora_path {best_dir}")
+        print(f"{'='*65}\n")
+
+
+# =====================================================================
+# 3c. Callback: save PEFT adapter alongside every Trainer checkpoint
 # =====================================================================
 class SavePeftAdapterCallback(TrainerCallback):
     """
@@ -383,13 +451,15 @@ def main():
 
     # ── exp-005 config ──────────────────────────────────────────────────────
     # Key changes from exp-004:
-    #   data   : now uses data/train.json (900) + data/val.json (100) split
-    #   eval   : eval_strategy="epoch" logs val/loss per epoch → overfitting detection
-    #   warmup : recalculated → 900 samples × 10ep / 8 accum = 1125 steps; 10% = 112
-    #   TB     : logging_dir = runs/EXP_ID  →  each run has its own named folder
-    # Unchanged: LR=1e-5, grad_clip=0.5, LoRA r=16, epochs=10
+    #   data   : data/train.json (900) + data/val.json (100) — first proper split
+    #   epochs : 10 → 15  (exp-004 still declining at ep10; val curve guides real stop)
+    #   best   : BestValCheckpointCallback saves checkpoint-best/ automatically
+    #   warmup : dynamically computed (≈10% of total steps)
+    #   memory : batch=1 stays the same; more epochs ≠ more peak memory
+    # Unchanged: LR=1e-5, grad_clip=0.5, LoRA r=16
     # ─────────────────────────────────────────────────────────────────────────
-    total_steps = (len(train_dataset) // 8) * 10     # approximate
+    NUM_EPOCHS  = 15
+    total_steps = (len(train_dataset) // 8) * NUM_EPOCHS
     warmup      = max(10, round(total_steps * 0.10))
     print(f"Config: total_steps≈{total_steps}  warmup={warmup}  exp={EXP_ID}")
 
@@ -397,7 +467,7 @@ def main():
         output_dir=OUTPUT_DIR,
         run_name=EXP_ID,                      # readable label in TensorBoard / W&B
         logging_dir=LOGGING_DIR,              # each EXP_ID gets its own TB folder
-        num_train_epochs=10,
+        num_train_epochs=NUM_EPOCHS,
         per_device_train_batch_size=1,
         gradient_accumulation_steps=8,        # effective batch = 8
         learning_rate=1e-5,
@@ -424,7 +494,7 @@ def main():
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         data_collator=collator,
-        callbacks=[LoraMetricsCallback(), SavePeftAdapterCallback()],
+        callbacks=[LoraMetricsCallback(), BestValCheckpointCallback(), SavePeftAdapterCallback()],
     )
 
     print("Starting Qwen2-Audio LoRA training...")
