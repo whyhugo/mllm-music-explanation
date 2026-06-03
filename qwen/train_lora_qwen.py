@@ -17,6 +17,7 @@ Training strategy (mirrors SALMONN approach)
 4. Compute cross-entropy loss only on the assistant response tokens.
 """
 
+import gc
 import os
 import json
 import torch
@@ -24,6 +25,9 @@ import torchaudio
 import numpy as np
 from dataclasses import dataclass
 from typing import Any, Dict, List
+
+# ── Fix 1: reduce VRAM fragmentation (must be set before any CUDA alloc) ────
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import (
@@ -223,7 +227,36 @@ class MusicCapsCollator:
 
 
 # =====================================================================
-# 3a. Callback: extra TensorBoard metrics
+# 3a. Callback: clear VRAM before evaluation
+# =====================================================================
+class ClearCacheBeforeEvalCallback(TrainerCallback):
+    """
+    Clears GPU memory fragmentation that accumulates during training
+    before each evaluation pass starts.
+
+    Root cause of OOM during eval:
+      - Training (grad_accum=8) manages VRAM efficiently via gradient release.
+      - At epoch end, Trainer triggers eval with a fresh 100-sample loop.
+      - Each eval forward pass keeps activations alive briefly; combined with
+        fragmentation from training, this can exceed the 24 GB limit.
+    Fix:
+      - on_epoch_end fires BEFORE the eval that follows epoch end.
+      - gc.collect() + torch.cuda.empty_cache() reclaim fragmented pages.
+    """
+
+    def on_epoch_end(self, args, state, control, **kwargs):
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+
+    def on_evaluate(self, args, state, control, **kwargs):
+        # Belt-and-suspenders: clear again if called independently
+        gc.collect()
+        torch.cuda.empty_cache()
+
+
+# =====================================================================
+# 3b. Callback: extra TensorBoard metrics
 # =====================================================================
 class LoraMetricsCallback(TrainerCallback):
     """
@@ -480,6 +513,8 @@ def main():
         save_total_limit=3,                   # keep only last 3 checkpoints → saves disk
         # ── Evaluation ───────────────────────────────────────────────────────
         eval_strategy="epoch" if val_dataset else "no",
+        per_device_eval_batch_size=1,         # explicit; one val sample at a time
+        eval_accumulation_steps=8,            # Fix 3: accumulate predictions in chunks
         load_best_model_at_end=False,         # incompatible with device_map="auto"
         # ── Logging ──────────────────────────────────────────────────────────
         logging_steps=10,
@@ -494,7 +529,8 @@ def main():
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         data_collator=collator,
-        callbacks=[LoraMetricsCallback(), BestValCheckpointCallback(), SavePeftAdapterCallback()],
+        callbacks=[ClearCacheBeforeEvalCallback(), LoraMetricsCallback(),
+                   BestValCheckpointCallback(), SavePeftAdapterCallback()],
     )
 
     print("Starting Qwen2-Audio LoRA training...")
