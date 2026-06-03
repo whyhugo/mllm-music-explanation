@@ -612,5 +612,54 @@
       "1054 train samples saturates at ~ep3; need ~3000 train samples to push to ep10"
     ],
     "next_experiment": "exp-006"
+  },
+  {
+    "id": "baseline-val117",
+    "date": "2026-06-03",
+    "name": "qwen2-audio-7b-base-val117",
+    "status": "completed",
+    "description": "Baseline evaluation of Qwen2-Audio-7B-Instruct (no fine-tuning) on the same 117 held-out val.json samples used in exp-005b and exp-006. This is the correct reference point for fair comparison.",
+    "evaluation": {
+      "eval_set": "data/val.json (117 samples, held-out)",
+      "eval_set_n": 117,
+      "finetuned": {
+        "ROUGE-1": 0.5114, "ROUGE-2": 0.2740, "ROUGE-L": 0.4063,
+        "BLEU": 0.2285, "METEOR": 0.4128, "avg_gen_len": 47.5
+      },
+      "baseline": {
+        "ROUGE-1": 0.5114, "ROUGE-2": 0.2740, "ROUGE-L": 0.4063,
+        "BLEU": 0.2285, "METEOR": 0.4128
+      },
+      "improvement_pct": {
+        "ROUGE-1": 0.0, "ROUGE-2": 0.0, "ROUGE-L": 0.0, "BLEU": 0.0, "METEOR": 0.0
+      }
+    }
+  },
+  {
+    "id": "exp-006",
+    "date": "2026-06-03",
+    "name": "qwen2-audio-lora-v6-augmented",
+    "status": "pending",
+    "description": "Data augmentation run: 1054 original + 2108 pitch-shifted (±2 semitones) = 3162 training samples. Val set same as exp-005b (117 held-out) for direct comparison. Target: push overfitting point from ep3 to ep8-9.",
+    "model": {
+      "base": "Qwen/Qwen2-Audio-7B-Instruct",
+      "lora": { "r": 16, "alpha": 32, "target_modules": ["q_proj","k_proj","v_proj","o_proj"], "dropout": 0.05 },
+      "projector_unfrozen": true
+    },
+    "dataset": {
+      "train": "data/train_augmented.json (3162 = 1054 orig + 1054 ps-2 + 1054 ps+2)",
+      "val": "data/val.json (117 samples, same as exp-005b)",
+      "augmentation": "pitch_shift ±2 semitones; captions unchanged"
+    },
+    "training": {
+      "epochs": 15,
+      "learning_rate": 1e-5,
+      "max_grad_norm": 0.5,
+      "fp16": true,
+      "eval_strategy": "epoch",
+      "save_total_limit": null
+    },
+    "expected_overfitting_epoch": "8-9",
+    "evaluation": null
   }
 ]
