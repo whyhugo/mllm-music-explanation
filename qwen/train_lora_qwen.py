@@ -508,6 +508,8 @@ def main():
         warmup_steps=warmup,                  # dynamically computed (≈10% of total)
         lr_scheduler_type="cosine",
         fp16=True,
+        gradient_checkpointing=True,
+        gradient_checkpointing=True,
         # ── Checkpointing ────────────────────────────────────────────────────
         save_strategy="epoch",
         save_total_limit=3,                   # keep only last 3 checkpoints → saves disk
