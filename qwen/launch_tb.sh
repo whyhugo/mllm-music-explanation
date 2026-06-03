@@ -38,9 +38,12 @@ if [ -n "$FILTER" ]; then
     done
     LOGDIR="${LOGDIR%,}"   # strip trailing comma
     if [ -z "$LOGDIR" ]; then
-        echo "[ERROR] No runs matching '$FILTER'. Available:"
-        ls "$RUNS_DIR"
-        exit 1
+        echo "[WARN] No runs matching '$FILTER' yet — showing all runs instead."
+        echo "       Start training to create runs/${FILTER}/:"
+        echo "         python qwen/train_lora_qwen.py"
+        echo ""
+        LOGDIR="$RUNS_DIR"   # fall back to all runs
+        FILTER="all (fallback)"
     fi
 else
     LOGDIR="$RUNS_DIR"
