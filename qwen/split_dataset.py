@@ -1,20 +1,21 @@
 """
-Train / Validation split for musiccaps_processed.json
+Train / Val / Test split for musiccaps_processed.json
 ======================================================
-Splits the manifest into stratified train and val sets, then writes:
+Splits the manifest into stratified train, val, and test sets, then writes:
   data/train.json
   data/val.json
+  data/test.json
 
 Stratification is by aspect_list length bucket so that easy (few aspects)
-and complex (many aspects) captions are represented in both splits.
+and complex (many aspects) captions are represented in all splits.
 
 Usage
 -----
-# Default 90/10 split, reproducible seed
+# Default 80/10/10 split, reproducible seed
 python qwen/split_dataset.py
 
 # Custom ratio and seed
-python qwen/split_dataset.py --val_ratio 0.15 --seed 123
+python qwen/split_dataset.py --val_ratio 0.15 --test_ratio 0.15 --seed 123
 
 # Inspect only (no files written)
 python qwen/split_dataset.py --dry_run
@@ -42,7 +43,7 @@ def bucket(item: dict) -> int:
     return 2
 
 
-def split(items: list, val_ratio: float, seed: int):
+def split(items: list, val_ratio: float, test_ratio: float, seed: int):
     rng = random.Random(seed)
 
     # Group by bucket
@@ -50,29 +51,34 @@ def split(items: list, val_ratio: float, seed: int):
     for item in items:
         buckets[bucket(item)].append(item)
 
-    train, val = [], []
+    train, val, test = [], [], []
     for b, group in sorted(buckets.items()):
         rng.shuffle(group)
         n_val = max(1, round(len(group) * val_ratio))
+        n_test = max(1, round(len(group) * test_ratio))
         val.extend(group[:n_val])
-        train.extend(group[n_val:])
+        test.extend(group[n_val:n_val + n_test])
+        train.extend(group[n_val + n_test:])
 
     # Final shuffle to avoid bucket ordering artefacts
     rng.shuffle(train)
     rng.shuffle(val)
-    return train, val
+    rng.shuffle(test)
+    return train, val, test
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--val_ratio", type=float, default=0.10,
                         help="Fraction of data for validation (default: 0.10)")
+    parser.add_argument("--test_ratio", type=float, default=0.10,
+                        help="Fraction of data for testing (default: 0.10)")
     parser.add_argument("--seed",      type=int,   default=42,
                         help="Random seed (default: 42)")
     parser.add_argument("--input",     default=str(DATA_JSON),
                         help="Source JSON manifest")
     parser.add_argument("--out_dir",   default=str(DATA_DIR),
-                        help="Output directory for train.json and val.json")
+                        help="Output directory for train.json, val.json, and test.json")
     parser.add_argument("--dry_run",   action="store_true",
                         help="Print stats without writing files")
     args = parser.parse_args()
@@ -89,15 +95,19 @@ def main():
     if missing:
         print(f"  ⚠  {missing} items skipped (audio not found on disk)")
 
-    train, val = split(available, args.val_ratio, args.seed)
+    train, val, test = split(available, args.val_ratio, args.test_ratio, args.seed)
 
     print(f"Total available : {len(available)}")
-    print(f"Train           : {len(train)}  ({len(train)/len(available)*100:.1f}%)")
-    print(f"Val             : {len(val)}   ({len(val)/len(available)*100:.1f}%)")
-    print(f"Val ratio       : {args.val_ratio}  seed={args.seed}")
+    train_pct = (len(train) / len(available) * 100) if available else 0.0
+    val_pct   = (len(val) / len(available) * 100) if available else 0.0
+    test_pct  = (len(test) / len(available) * 100) if available else 0.0
+    print(f"Train           : {len(train)}  ({train_pct:.1f}%)")
+    print(f"Val             : {len(val)}   ({val_pct:.1f}%)")
+    print(f"Test            : {len(test)}   ({test_pct:.1f}%)")
+    print(f"Val ratio       : {args.val_ratio}  test ratio : {args.test_ratio}  seed={args.seed}")
 
     # Bucket distribution check
-    for split_name, split_items in [("train", train), ("val", val)]:
+    for split_name, split_items in [("train", train), ("val", val), ("test", test)]:
         counts = defaultdict(int)
         for item in split_items:
             counts[bucket(item)] += 1
@@ -112,15 +122,19 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     train_path = out / "train.json"
     val_path   = out / "val.json"
+    test_path  = out / "test.json"
 
     with open(train_path, "w", encoding="utf-8") as f:
         json.dump(train, f, indent=4, ensure_ascii=False)
     with open(val_path, "w", encoding="utf-8") as f:
         json.dump(val, f, indent=4, ensure_ascii=False)
+    with open(test_path, "w", encoding="utf-8") as f:
+        json.dump(test, f, indent=4, ensure_ascii=False)
 
     print(f"\nSaved:")
     print(f"  {train_path}  ({len(train)} items)")
     print(f"  {val_path}  ({len(val)} items)")
+    print(f"  {test_path}  ({len(test)} items)")
     print("\nTo use in training, set DATA_JSON in train_lora_qwen.py:")
     print(f'  DATA_JSON = os.path.join(PROJECT_ROOT, "data", "train.json")')
 
