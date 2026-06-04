@@ -639,7 +639,7 @@
     "id": "exp-006",
     "date": "2026-06-03",
     "name": "qwen2-audio-lora-v6-augmented",
-    "status": "pending",
+    "status": "completed_eval_pending",
     "description": "Data augmentation run: 1054 original + 2108 pitch-shifted (±2 semitones) = 3162 training samples. Val set same as exp-005b (117 held-out) for direct comparison. Target: push overfitting point from ep3 to ep8-9.",
     "model": {
       "base": "Qwen/Qwen2-Audio-7B-Instruct",
@@ -659,7 +659,56 @@
       "eval_strategy": "epoch",
       "save_total_limit": null
     },
-    "expected_overfitting_epoch": "8-9",
-    "evaluation": null
+    "expected_overfitting_epoch": "8-9 (actual: 2 — earlier than expected)",
+    "training": {
+      "epochs": 15,
+      "total_steps": 5940,
+      "steps_per_epoch": 396,
+      "inferred_train_samples": 3168,
+      "avg_train_loss": 4.574,
+      "learning_rate": 1e-5,
+      "max_grad_norm": 0.5,
+      "fp16": true,
+      "runtime_hours": 10.76
+    },
+    "train_loss_by_epoch": [
+      10.648, 9.632, 8.433, 7.260, 6.101, 5.098, 4.211,
+      3.461, 2.871, 2.393, 2.048, 1.812, 1.645, 1.568, 1.526
+    ],
+    "val_loss_history": [
+      {"epoch":1,  "step":396,  "val_loss":1.1151},
+      {"epoch":2,  "step":792,  "val_loss":1.0937, "note":"BEST"},
+      {"epoch":3,  "step":1188, "val_loss":1.1078},
+      {"epoch":4,  "step":1584, "val_loss":1.1524},
+      {"epoch":5,  "step":1980, "val_loss":1.2121},
+      {"epoch":6,  "step":2376, "val_loss":1.2729},
+      {"epoch":7,  "step":2772, "val_loss":1.3297},
+      {"epoch":8,  "step":3168, "val_loss":1.4217},
+      {"epoch":9,  "step":3564, "val_loss":1.4864},
+      {"epoch":10, "step":3960, "val_loss":1.5712},
+      {"epoch":11, "step":4356, "val_loss":1.6339},
+      {"epoch":12, "step":4752, "val_loss":1.6839},
+      {"epoch":13, "step":5148, "val_loss":1.7175},
+      {"epoch":14, "step":5544, "val_loss":1.7449},
+      {"epoch":15, "step":5940, "val_loss":1.7501}
+    ],
+    "best_checkpoint": {
+      "path": "checkpoint-best",
+      "epoch": 2,
+      "step": 792,
+      "val_loss": 1.0937,
+      "vs_exp005b_val_loss": -0.0188
+    },
+    "evaluation": null,
+    "observations": [
+      "Best val_loss=1.0937 slightly better than exp-005b (1.1125), Δ=-1.69%",
+      "UNEXPECTED: overfitting starts at ep3 (earlier than exp-005b ep4), despite 3× augmented data",
+      "Train loss falls all 15 epochs (10.6→1.5): model learned all 3162 samples well",
+      "Final val_loss=1.75 vs exp-005b=1.32: much worse late overfitting with augmented data",
+      "Diagnosis: pitch-shifted clips share captions with originals — model quickly memorizes",
+      "  the 1054-clip distribution; augmentation added repetition not diversity",
+      "Val loss improvement is marginal (1.69%) despite 3× training data",
+      "Augmentation via same-caption pitch shift is less effective than truly new music data"
+    ]
   }
 ]
