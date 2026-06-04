@@ -639,7 +639,7 @@
     "id": "exp-006",
     "date": "2026-06-03",
     "name": "qwen2-audio-lora-v6-augmented",
-    "status": "completed_eval_pending",
+    "status": "completed",
     "description": "Data augmentation run: 1054 original + 2108 pitch-shifted (±2 semitones) = 3162 training samples. Val set same as exp-005b (117 held-out) for direct comparison. Target: push overfitting point from ep3 to ep8-9.",
     "model": {
       "base": "Qwen/Qwen2-Audio-7B-Instruct",
@@ -699,7 +699,26 @@
       "val_loss": 1.0937,
       "vs_exp005b_val_loss": -0.0188
     },
-    "evaluation": null,
+    "evaluation": {
+      "eval_set": "data/val.json (117 samples, same as exp-005b)",
+      "eval_set_n": 117,
+      "baseline": {
+        "ROUGE-1": 0.5114, "ROUGE-2": 0.2740, "ROUGE-L": 0.4063, "BLEU": 0.2285, "METEOR": 0.4128
+      },
+      "finetuned": {
+        "ROUGE-1": 0.5408, "ROUGE-2": 0.3133, "ROUGE-L": 0.4393, "BLEU": 0.2659, "METEOR": 0.4496,
+        "avg_gen_len": 50.5
+      },
+      "improvement_pct": {
+        "ROUGE-1": 5.75, "ROUGE-2": 14.34, "ROUGE-L": 8.12, "BLEU": 16.37, "METEOR": 8.91
+      },
+      "vs_exp005b_pct": {
+        "ROUGE-1": -7.95, "ROUGE-2": -13.00, "ROUGE-L": -9.01, "BLEU": -13.27, "METEOR": -8.69,
+        "avg": -10.38,
+        "note": "exp-006 WORSE than exp-005b — pitch augmentation backfired"
+      },
+      "avg_improvement_vs_baseline": 10.70
+    },
     "observations": [
       "Best val_loss=1.0937 slightly better than exp-005b (1.1125), Δ=-1.69%",
       "UNEXPECTED: overfitting starts at ep3 (earlier than exp-005b ep4), despite 3× augmented data",
