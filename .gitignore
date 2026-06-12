@@ -2,7 +2,7 @@
 outputs/
 
 # ── Downloaded audio clips ─────────────────────────────────────────────────
-musiccaps_audio/
+musiccaps_audio
 
 # ── Model weight files (binary, too large for git) ────────────────────────
 *.safetensors
