@@ -26,14 +26,6 @@
 
 \maketitle
 
-\begin{abstract}
-    Automatic music captioning aims to generate descriptive natural language from raw audio signals. While Multimodal Large Language Models (MLLMs) have shown remarkable capabilities, zero-shot configurations often suffer from structural misalignment and semantic dilution. In this paper, we present an implementation that applies Low-Rank Adaptation (LoRA) to fine-tune the Qwen2-Audio-7B model~\cite{qwen2audio} on the Google MusicCaps dataset~\cite{musiccaps}. Our approach enforces structural constraints and vocabulary granularity directly within the language space, improving both structural alignment and semantic richness over the baseline zero-shot model.
-\end{abstract}
-
-\begin{IEEEkeywords}
-    Music Captioning, Multimodal Large Language Models, PEFT, LoRA, Qwen2-Audio
-\end{IEEEkeywords}
-
 \section{Introduction}
 \label{sec:introduction}
 \textbf{GOAL:}
