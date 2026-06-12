@@ -1,0 +1,98 @@
+\documentclass[10pt, conference, letterpaper]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{fontspec} 
+\usepackage{xeCJK}
+
+% 定義一個正規的 Problem 環境來取代 blockquote
+\newtheorem{problem}{Problem Statement}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+    
+\begin{document}
+
+\title{Improving Structural Alignment and Semantic Richness in Music Captioning via Parameter-Efficient Fine-Tuning}
+\author{
+    \IEEEauthorblockN{鄭兆宏\quad 王修佑\quad 林德恩\quad 韓欣劭}
+    \IEEEauthorblockA{Dept. of Computer Science and Information Engineering, National Taiwan Normal University\\
+        Email: \{41247008S, 41247013S, 41247022S, 41247039S\}@ntnu.edu.tw}
+}
+
+\maketitle
+
+\begin{abstract}
+    Automatic music captioning aims to generate descriptive natural language from raw audio signals. While Multimodal Large Language Models (MLLMs) have shown remarkable capabilities, zero-shot configurations often suffer from structural misalignment and semantic dilution. In this paper, we present an implementation that applies Low-Rank Adaptation (LoRA) to fine-tune the Qwen2-Audio-7B model on the Google MusicCaps dataset. Our approach enforces structural constraints and vocabulary granularity directly within the language space, improving both structural alignment and semantic richness over the baseline zero-shot model.
+\end{abstract}
+
+\begin{IEEEkeywords}
+    Music Captioning, Multimodal Large Language Models, PEFT, LoRA, Qwen2-Audio
+\end{IEEEkeywords}
+
+\section{Introduction}
+\label{sec:introduction}
+\textbf{GOAL:}
+Improve structural alignment and semantic richness over the zero-shot model.
+
+
+The rapid advancement of Multimodal Large Language Models (MLLMs) has dramatically transformed cross-modal understanding, enabling deep integration between auditory signals and textual reasoning. Within this landscape, \textit{music captioning}---the task of generating coherent, rich, and contextually accurate natural language descriptions from raw music audio---serves as a critical frontier in computational musicology and machine listening.
+
+\subsection{Application Domain}
+Automating the translation of musical acoustics into human prose holds immense value across several real-world digital ecosystems. In music streaming platforms and large-scale digital libraries, automatic captioning facilitates precise content discovery, automated playlist generation, and semantic search over massive, unlabeled audio repositories[cite: 1, 491]. Furthermore, it plays a vital role in accessibility, providing vivid contextual descriptions for deaf and hard-of-hearing individuals[cite: 492]. Lastly, fine-grained music captions serve as foundational semantic prompts to guide contemporary text-to-music generative frameworks, which rely heavily on highly descriptive text to synthesize target acoustic structures[cite: 11, 12, 324].
+
+\subsection{Motivation and Problem Statement}
+Despite the success of modern audio-language foundation models, directly deploying them in a zero-shot manner for music captioning yields suboptimal results[cite: 938]. Zero-shot inferences frequently suffer from two core limitations:
+\begin{enumerate}
+    \item \textbf{Structural Misalignment:} The generated text often lacks a cohesive structure or chronological flow that mirrors the intrinsic temporal progression of the music tracks[cite: 939, 1150].
+    \item \textbf{Semantic Dilution:} Models tend to produce generic tags (e.g., ``upbeat melody'' or ``good pop song'') instead of identifying ``hard features'' such as instrumentation, chord progressions, precise tempo (BPM), or key signatures[cite: 939, 1150].
+\end{enumerate}
+
+Formally, the music captioning task is modeled as a conditional sequence generation problem. Given a raw music audio sample represented as a sequence of acoustic frames $X$, the goal is to leverage a pre-trained multimodal language network parameterized by weights $\Theta$ to generate a target natural language token sequence $Y = \{y_1, y_2, \dots, y_T\}$[cite: 940, 991]. The generation process is formulated by maximizing the conditional probability[cite: 940, 992]:
+\begin{equation}
+    P(Y \mid X; \Theta) = \prod_{t=1}^{T} P(y_t \mid y_{<t}, X; \Theta)
+\end{equation}
+where $y_{<t}$ denotes the history of generated text tokens up to time step $t-1$[cite: 940, 992].
+
+
+
+
+In the zero-shot baseline scenario, $\Theta$ remains static and unoptimized for the nuances of music theory terminology, causing severe discrepancies between the distribution of $P(Y \mid X; \Theta)$ and the ground-truth target text distributions[cite: 940, 993].
+
+\subsection{Goals and Contributions}
+To address these limitations, this study aims to transition away from generic zero-shot generation by introducing a localized, parameter-efficient instruction-tuning pipeline[cite: 941, 1152]. Specifically, we harness the state-of-the-art \textbf{Qwen2-Audio-7B} base model---a highly robust foundation audio-language network [cite: 995, 1052]---and adapt it using Low-Rank Adaptation (LoRA) parameter-efficient fine-tuning (PEFT)[cite: 942, 1052].
+
+By fine-tuning exclusively on the gold-standard \textbf{Google MusicCaps} dataset [cite: 942, 1053], we optimize a minimal parameter subset $\Delta\theta$ (where $|\Delta\theta| \ll |\Theta|$)[cite: 940, 1053]. Our goal is to explicitly inject structural regularities and semantic granularity directly into the model's output decoder space[cite: 997, 1108]. The proposed pipeline optimizes the adjusted objective[cite: 998, 1109]:
+\begin{equation}
+    P(Y \mid X; \Theta + \Delta\theta) = \prod_{t=1}^{T} P(y_t \mid y_{<t}, X; W + B \cdot A)
+\end{equation}
+where $W \in \Theta$ represents the pre-trained frozen weight matrices, and $B, A \in \Delta\theta$ are the low-rank adaptation decomposition matrices, thereby enforcing precise alignment between raw acoustic traits and domain-specific musical descriptions[cite: 1055, 1109].
+
+\section{Related Work}
+\label{sec:related_work}
+
+The evolution of automatic music description has shifted from simplistic multi-label tag classification to sophisticated text generation[cite: 944, 1110]. To contextualize our implementation, we analyze three distinct architectural paradigms in recent literature[cite: 1000, 1111].
+
+\subsection{Foundational Deep Encoder-Decoder Frameworks}
+The conceptual foundation of treating music description as a fluid sequence-to-sequence task was pioneered by Manco et al. in \textit{MusCaps} \cite{manco2021muscaps}. The MusCaps architecture introduces a joint multimodal framework combining a convolutional network (CNN) front-end for feature extraction with a Recurrent Neural Network (RNN/LSTM) text decoder enhanced by temporal attention[cite: 948, 1113]. A key insight from MusCaps was the strict necessity of target-domain audio pre-training to obtain acoustic representations that effectively summarize musical features before textual alignment[cite: 949, 1114]. While successful in establishing the feasibility of natural language music descriptions [cite: 950, 1115], its reliance on classical LSTM structures limited its capability to capture long-range structural dependencies and generate high-level semantic prose[cite: 950, 1115].
+
+\subsection{Multi-Task Learning and Token Projection}
+To inject explicit technical musical dimensions---often termed ``hard features'' like key, presence of vocals, or tempo [cite: 951, 1062]---Chopra et al. proposed \textit{SonicVerse} \cite{chopra2025sonicverse}. SonicVerse utilizes a projection-based architecture to align audio inputs into language spaces while simultaneously forcing feature awareness[cite: 952, 1063]. The raw audio is passed through a pre-trained MERT encoder and split into a dual-pathway system: a music content projector capturing subjective descriptive traits, and a music feature projector driven by dedicated multi-task classification heads[cite: 953, 1064]. Crucially, while SonicVerse relies on automated feature extraction libraries during its data curation phase to alleviate the lack of manual labels [cite: 1134, 1184], its unified multi-task architecture eliminates the need for external inference tools by embedding feature prediction directly into the pipeline[cite: 1221]. These predicted features are mapped into language tokens to enrich the context window of a frozen Mistral-7B model[cite: 954, 1065]. For longer compositions, SonicVerse leverages LLM chaining (via GPT-4) to stitch together segmented 10-second chunk captions[cite: 955, 1066].
+
+\subsection{Direct Metadata Imputation and Two-Stage Synthesis}
+Addressing the sparse availability of paired audio-caption datasets, Bukey et al. presented a unique alternative via metadata-driven language synthesis in \textit{Rethinking Music Captioning} \cite{bukey2026rethinking}. Instead of configuring an end-to-end network to map audio signals directly to fluid textual paragraphs [cite: 958, 1124], they instruction-tune a multimodal model (built on Gemma3-1B-it) to act as a structured metadata predictor given an audio input alongside optional partial metadata tokens[cite: 1137, 1542]. This design enables the network to infer clean, structured JSON schemas detailing categorical fields such as genre, mood, tempo, and key [cite: 958, 1125], while inherently supporting metadata imputation tasks for incomplete databases[cite: 1553]. At inference time, this generated JSON snippet is decoupled and handed over to an offline text-only LLM, which uses custom post-hoc style prompts to re-write the dry metadata fields into rich, expressive prose[cite: 959, 1126]. While this modular strategy yields fast training convergence and permits post-training style alterations [cite: 960, 1127], it decouples text synthesis from direct acoustic feedback, risking the loss of fine-grained emotional and structural dynamics that only unified models can naturally capture[cite: 961, 1127].
+
+\subsection{The Proposed Approach}
+Our work occupies a unique middle ground between these existing methodologies[cite: 962, 1074]. Unlike early architectures like \textit{MusCaps}, we inherit the vast, emergent zero-shot auditory knowledge of a 7-billion parameter foundation MLLM (\textbf{Qwen2-Audio-7B})[cite: 963, 1075]. Furthermore, in contrast to frameworks like \textit{SonicVerse}---which adds architectural complexity via parallel multi-task prediction pathways to guide token insertion [cite: 1019, 1076]---and \textit{Metadata LLMs}---which completely decouple paragraph generation from raw audio via an intermediate JSON rewrite stage [cite: 1019, 1076]---our method injects structural and vocabulary constraints directly into the integrated model's unified language space[cite: 964]. By executing localized \textbf{LoRA PEFT} natively on the gold-standard \textbf{Google MusicCaps} dataset [cite: 965, 1077], we provide an efficient, unified solution that enforces strict structural alignment and rich semantic vocabulary inside a singular, resource-conscious framework[cite: 965, 1077].
+
+\begin{thebibliography}{00}
+    \bibitem{manco2021muscaps} I. Manco, E. Benetos, E. Quinton, and G. Fazekas, ``MusCaps: Generating Captions for Music Audio,'' in \textit{Proceedings of the International Joint Conference on Neural Networks (IJCNN)}, 2021.
+    \bibitem{chopra2025sonicverse} A. Chopra, A. Roy, and D. Herremans, ``SonicVerse: Multi-Task Learning for Music Feature-Informed Captioning,'' in \textit{Proceedings of the 6th Conference on AI Music Creativity (AIMC)}, 2025.
+    \bibitem{bukey2026rethinking} I. Bukey, Z. Wang, C. Donahue, and N. J. Bryan, ``Rethinking Music Captioning with Music Metadata LLMs,'' \textit{arXiv preprint arXiv:2602.03023}, 2026.
+\end{thebibliography}
+
+\end{document}
