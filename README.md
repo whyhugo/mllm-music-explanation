@@ -222,23 +222,48 @@ exp-{三位數}-{說明}    exp-007-lora-r32
 
 ## 環境建置
 
+### 步驟 1：安裝套件
+
 ```bash
-# 1. 建立虛擬環境
 python -m venv .venv
 source .venv/bin/activate
 pip install -r qwen/requirements.txt
-
-# 2. 下載 MusicCaps 音頻（~1000 筆，受 YouTube 版權限制，成功率約 21%）
-python salmonn/download_musiccaps.py --target all --workers 3
-
-# 3. 切分檔案已 commit 至 repo，clone 後直接使用：
-#    data/musiccaps_train.json  (1011 筆)
-#    data/musiccaps_val.json    ( 128 筆)
-#    data/musiccaps_test.json   ( 128 筆)
-# 若要下載更多音頻並重新生成切分：
-#   python salmonn/download_musiccaps.py --target all --workers 4
-#   python data/split.py  # 80/10/10, seed=42
 ```
+
+### 步驟 2：取得音頻（二擇一）
+
+**選項 A — 使用共享音頻目錄（推薦，組織內部成員）**
+
+音頻已由管理員統一下載並放置於共享路徑。建立 symlink 指向該目錄即可：
+
+```bash
+ln -s /path/to/shared/musiccaps_audio ./musiccaps_audio
+```
+
+確認可用：
+
+```bash
+ls musiccaps_audio/ | wc -l   # 應顯示 1267
+```
+
+**選項 B — 自行從 YouTube 下載（首次建置或新環境）**
+
+```bash
+python salmonn/download_musiccaps.py --target all --workers 4
+# 耗時約 2 小時；受 YouTube 版權限制，可下載上限約 1267 筆
+```
+
+### 步驟 3：確認切分檔案
+
+切分 JSON 已 commit 至 repo，**clone 後直接可用，不需重跑 split.py**：
+
+```
+data/musiccaps_train.json  — 1011 筆（訓練）
+data/musiccaps_val.json    —  128 筆（驗證）
+data/musiccaps_test.json   —  128 筆（最終評估，訓練期間禁止使用）
+```
+
+---
 
 **硬體需求**
 
@@ -247,7 +272,7 @@ python salmonn/download_musiccaps.py --target all --workers 3
 | GPU VRAM | 24 GB（已在 RTX 3090 / 4090 測試） |
 | CUDA | 11.8+ |
 | Python | 3.10+ |
-| 磁碟空間 | ~20 GB（音頻 + checkpoint） |
+| 磁碟空間 | ~20 GB（音頻 ~920 MB + checkpoint 最多 ~16 GB） |
 
 ---
 
@@ -256,10 +281,7 @@ python salmonn/download_musiccaps.py --target all --workers 3
 ### 訓練
 
 ```bash
-# 在 qwen/train_lora_qwen.py 頂部設定：
-#   EXP_ID = "exp-007"
-#   DATA_JSON_TRAIN = os.path.join(PROJECT_ROOT, "data", "musiccaps_train.json")
-#   DATA_JSON_VAL   = os.path.join(PROJECT_ROOT, "data", "musiccaps_val.json")
+# 在 qwen/train_lora_qwen.py 頂部設定 EXP_ID = "exp-007"（每次實驗前更換）
 
 python qwen/train_lora_qwen.py
 
