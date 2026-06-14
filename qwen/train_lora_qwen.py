@@ -528,7 +528,6 @@ def main():
         lr_scheduler_type="cosine",
         fp16=True,
         gradient_checkpointing=True,
-        gradient_checkpointing=True,
         # ── Checkpointing ────────────────────────────────────────────────────
         save_strategy="epoch",
         save_total_limit=None,                # keep ALL checkpoints (best ep may be early)
