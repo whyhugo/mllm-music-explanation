@@ -553,9 +553,54 @@ def main():
                    BestValCheckpointCallback(), SavePeftAdapterCallback()],
     )
 
+    import time
+    start_time = time.time()
+
     print("Starting Qwen2-Audio LoRA training...")
     trainer.train()
+
+    end_time = time.time()
+    elapsed_sec = end_time - start_time
+    elapsed_min = elapsed_sec / 60.0
+    elapsed_hr = elapsed_sec / 3600.0
+
+    # Calculate disk usage of checkpoints
+    total_bytes = 0
+    if os.path.exists(OUTPUT_DIR):
+        for root, dirs, files in os.walk(OUTPUT_DIR):
+            for f in files:
+                fp = os.path.join(root, f)
+                try:
+                    if os.path.exists(fp) and not os.path.islink(fp):
+                        total_bytes += os.path.getsize(fp)
+                except Exception:
+                    pass
+    total_gb = total_bytes / (1024 ** 3)
+
+    # Write a summary JSON
+    summary_path = os.path.join(OUTPUT_DIR, f"run_summary_{EXP_ID}.json")
+    summary_data = {
+        "exp_id": EXP_ID,
+        "runtime_seconds": round(elapsed_sec, 2),
+        "runtime_minutes": round(elapsed_min, 2),
+        "runtime_hours": round(elapsed_hr, 2),
+        "total_storage_gb": round(total_gb, 4)
+    }
+    try:
+        os.makedirs(os.path.dirname(summary_path), exist_ok=True)
+        with open(summary_path, "w", encoding="utf-8") as f:
+            json.dump(summary_data, f, indent=2)
+    except Exception as e:
+        print(f"[WARNING] Failed to write summary JSON: {e}")
+
+    print(f"\n{'='*65}")
     print(f"Training complete. Checkpoints saved to: {OUTPUT_DIR}")
+    print(f"Training Runtime: {elapsed_sec:.2f} seconds ({elapsed_min:.2f} minutes / {elapsed_hr:.2f} hours)")
+    print(f"Total storage space used by outputs: {total_gb:.4f} GB")
+    if os.path.exists(summary_path):
+        print(f"Saved run summary to: {summary_path}")
+    print(f"{'='*65}\n")
+
 
 
 if __name__ == "__main__":

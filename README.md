@@ -156,8 +156,11 @@ exp-{三位數}-{說明}    exp-007-lora-r32
     "learning_rate": ...,
     "max_grad_norm": ...,
     "eval_strategy": "epoch",
-    "save_total_limit": null
+    "save_total_limit": null,
+    "runtime_hours": ...,         // 實際訓練耗時（小時）
+    "storage_gb": ...             // 訓練產出/Checkpoints 所佔用的硬碟空間（GB）
   },
+
   "val_loss_history": [...],
   "best_checkpoint": { "epoch": ..., "val_loss": ... },
   "evaluation": {
@@ -272,7 +275,8 @@ data/musiccaps_test.json   —  128 筆（最終評估，訓練期間禁止使�
 | GPU VRAM | 24 GB（已在 RTX 3090 / 4090 測試） |
 | CUDA | 11.8+ |
 | Python | 3.10+ |
-| 磁碟空間 | ~20 GB（音頻 ~920 MB + checkpoint 最多 ~16 GB） |
+| 磁碟空間 | ~20 GB 以上（原始音頻 ~920 MB + 單一 checkpoint 約 ~15 GB。**注意：** 若 `save_total_limit = None` 且保留所有 epoch checkpoints，15 個 epochs 累計會佔用超過 ~225 GB。若硬碟空間有限，建議設定 `save_total_limit` 限制數量，或訓練完成後僅保留輕量化的 `checkpoint-best` adapter） |
+
 
 ---
 

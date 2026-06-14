@@ -126,5 +126,35 @@ trainer = Trainer(
     ),
 )
 
+import time
+import json
+start_time = time.time()
+
 print("Starting LoRA training...")
 trainer.train()
+
+end_time = time.time()
+elapsed_sec = end_time - start_time
+elapsed_min = elapsed_sec / 60.0
+elapsed_hr = elapsed_sec / 3600.0
+
+# Calculate disk usage of checkpoints
+total_bytes = 0
+if os.path.exists(OUTPUT_DIR):
+    for root, dirs, files in os.walk(OUTPUT_DIR):
+        for f in files:
+            fp = os.path.join(root, f)
+            try:
+                if os.path.exists(fp) and not os.path.islink(fp):
+                    total_bytes += os.path.getsize(fp)
+            except Exception:
+                pass
+total_gb = total_bytes / (1024 ** 3)
+
+print(f"\n{'='*65}")
+print(f"Training complete. Checkpoints saved to: {OUTPUT_DIR}")
+print(f"Training Runtime: {elapsed_sec:.2f} seconds ({elapsed_min:.2f} minutes / {elapsed_hr:.2f} hours)")
+print(f"Total storage space used by outputs: {total_gb:.4f} GB")
+print(f"{'='*65}\n")
+
+
