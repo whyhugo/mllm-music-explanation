@@ -376,10 +376,10 @@ class BestValCheckpointCallback(TrainerCallback):
         os.makedirs(best_dir, exist_ok=True)
 
         # Save lightweight LoRA adapter (NOT the full frozen model)
-        if hasattr(model, "language_model"):
-            model.language_model.save_pretrained(best_dir)
-        if hasattr(model, "multi_modal_projector"):
-            torch.save(model.multi_modal_projector.state_dict(),
+        if hasattr(model.model, "language_model"):
+            model.model.language_model.save_pretrained(best_dir)
+        if hasattr(model.model, "multi_modal_projector"):
+            torch.save(model.model.multi_modal_projector.state_dict(),
                        os.path.join(best_dir, "projector_weights.pt"))
 
         with open(os.path.join(best_dir, "best_info.json"), "w") as f:
@@ -426,14 +426,14 @@ class SavePeftAdapterCallback(TrainerCallback):
         os.makedirs(ckpt_dir, exist_ok=True)
 
         # Save PEFT adapter (LoRA config + adapter weights only)
-        if hasattr(model, "language_model"):
-            model.language_model.save_pretrained(ckpt_dir)
+        if hasattr(model.model, "language_model"):
+            model.model.language_model.save_pretrained(ckpt_dir)
             print(f"\n[Callback] Saved LoRA adapter → {ckpt_dir}/adapter_*.* ")
 
         # Save projector weights separately (they are not part of the PEFT adapter)
-        if hasattr(model, "multi_modal_projector"):
+        if hasattr(model.model, "multi_modal_projector"):
             proj_path = os.path.join(ckpt_dir, "projector_weights.pt")
-            torch.save(model.multi_modal_projector.state_dict(), proj_path)
+            torch.save(model.model.multi_modal_projector.state_dict(), proj_path)
             print(f"[Callback] Saved projector weights → {proj_path}")
 
         return control
@@ -456,8 +456,8 @@ def build_model(model_id: str):
 
     # --- Unfreeze multi-modal projector (audio → LLM bridge) ---
     # Mirrors SALMONN's speech_llama_proj / speech_Qformer unfreezing
-    if hasattr(model, "multi_modal_projector"):
-        for param in model.multi_modal_projector.parameters():
+    if hasattr(model.model, "multi_modal_projector"):
+        for param in model.model.multi_modal_projector.parameters():
             param.requires_grad = True
             param.data = param.data.to(torch.float32)
         print("Unfrozen: multi_modal_projector")
@@ -473,8 +473,8 @@ def build_model(model_id: str):
         bias="none",
         task_type=TaskType.CAUSAL_LM,
     )
-    model.language_model = get_peft_model(model.language_model, lora_config)
-    model.language_model.print_trainable_parameters()
+    model.model.language_model = get_peft_model(model.model.language_model, lora_config)
+    model.model.language_model.print_trainable_parameters()
 
     return model
 

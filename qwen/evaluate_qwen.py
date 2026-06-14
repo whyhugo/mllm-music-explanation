@@ -144,17 +144,17 @@ def load_lora_checkpoint(model, lora_path: str):
     # ------------------------------------------------------------------
     if os.path.exists(adapter_cfg):
         print(f"  Format: PEFT adapter  ({lora_path}/adapter_config.json found)")
-        model.language_model = PeftModel.from_pretrained(
-            model.language_model,
+        model.model.language_model = PeftModel.from_pretrained(
+            model.model.language_model,
             lora_path,
             is_trainable=False,
         )
 
         # Load projector weights if present
         proj_pt = os.path.join(lora_path, "projector_weights.pt")
-        if os.path.exists(proj_pt) and hasattr(model, "multi_modal_projector"):
+        if os.path.exists(proj_pt) and hasattr(model.model, "multi_modal_projector"):
             proj_state = torch.load(proj_pt, map_location="cpu")
-            model.multi_modal_projector.load_state_dict(proj_state, strict=True)
+            model.model.multi_modal_projector.load_state_dict(proj_state, strict=True)
             print("  Loaded projector weights from projector_weights.pt")
 
         return model
@@ -167,12 +167,12 @@ def load_lora_checkpoint(model, lora_path: str):
     print("  Reconstructing PEFT model from training config...")
 
     # Inject LoRA with the same config used during training
-    model.language_model = get_peft_model(model.language_model, LORA_CONFIG)
+    model.model.language_model = get_peft_model(model.model.language_model, LORA_CONFIG)
 
     state_dict = _load_state_dict_from_trainer_ckpt(lora_path)
 
-    # Extract LoRA adapter keys  (language_model.base_model.model.*.lora_*)
-    lm_prefix = "language_model."
+    # Extract LoRA adapter keys  (model.language_model.base_model.model.*.lora_*)
+    lm_prefix = "model.language_model."
     lora_adapter_state = {
         k[len(lm_prefix):]: v
         for k, v in state_dict.items()
@@ -185,20 +185,20 @@ def load_lora_checkpoint(model, lora_path: str):
             "The model will behave as the base model."
         )
     else:
-        result = set_peft_model_state_dict(model.language_model, lora_adapter_state)
+        result = set_peft_model_state_dict(model.model.language_model, lora_adapter_state)
         n_loaded = len(lora_adapter_state)
         n_unexpected = len(result.unexpected_keys) if hasattr(result, "unexpected_keys") else 0
         print(f"  Loaded {n_loaded} LoRA tensors  ({n_unexpected} unexpected keys).")
 
     # Extract projector weights
-    proj_prefix = "multi_modal_projector."
+    proj_prefix = "model.multi_modal_projector."
     proj_state = {
         k[len(proj_prefix):]: v
         for k, v in state_dict.items()
         if k.startswith(proj_prefix)
     }
-    if proj_state and hasattr(model, "multi_modal_projector"):
-        model.multi_modal_projector.load_state_dict(proj_state, strict=False)
+    if proj_state and hasattr(model.model, "multi_modal_projector"):
+        model.model.multi_modal_projector.load_state_dict(proj_state, strict=False)
         print(f"  Loaded {len(proj_state)} projector tensors from full checkpoint.")
 
     return model
