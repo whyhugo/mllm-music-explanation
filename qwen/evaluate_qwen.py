@@ -53,7 +53,7 @@ LORA_CONFIG = LoraConfig(
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
     lora_dropout=0.05,
     bias="none",
-    task_type=TaskType.CAUSAL_LM,
+    task_type=None,
 )
 
 PROJECT_ROOT   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -471,7 +471,7 @@ def build_model(model_id: str):
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
         lora_dropout=0.05,
         bias="none",
-        task_type=TaskType.CAUSAL_LM,
+        task_type=None,
     )
     model.model.language_model = get_peft_model(model.model.language_model, lora_config)
     model.model.language_model.print_trainable_parameters()
