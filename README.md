@@ -314,17 +314,28 @@ python qwen/evaluate_qwen.py \
     --input data/musiccaps_val.json \
     --output outputs/eval_exp007.json
 
-# 3. 計算指標並比較
+# 3. 計算指標並比較（預設自動啟用 1000 輪 Bootstrap 自助法估算均值與標準差）
 python run_eval_compare.py \
     --baseline outputs/eval_baseline_valXX.json \
-    --ours outputs/eval_exp007.json
+    --finetuned outputs/eval_exp007.json
 
-# 4. 查看所有實驗摘要
+# 4. 若要跑傳統 Corpus 層級評估（無標準差），請加上 --no-bootstrap
+python run_eval_compare.py \
+    --baseline outputs/eval_baseline_valXX.json \
+    --finetuned outputs/eval_exp007.json \
+    --no-bootstrap
+
+# 5. 查看所有實驗摘要
 python experiments/compare.py
 python experiments/compare.py --detail exp-007
 ```
 
-> **Test set 只在最終報告時執行一次**，將 `--input` 換成 `data/musiccaps_test.json`。
+> **評估指標說明**：
+> - 預設運行的比較腳本會以 `1000 輪 Bootstrap 自助法` 估算平均分數與其統計標準差。
+> - 輸出表格中各欄位的代表意義：
+>   - **`Mean ± Boot SD`**：自助法重採樣後的指標平均值，以及其平均值的標準誤差（SEM，寫論文/報告評估統計顯著性使用）。
+>   - **`Sample SD`**（資料之間的標準差）：測試集中各個音訊樣本指標分數的標準差（反映模型在不同音樂片段間的表現波動/穩定度，即原本 `compute_metrics_with_std.py` 算出的波動度）。
+> - **Test set 只在最終報告時執行一次**，將 `--input` 換成 `data/musiccaps_test.json`。
 
 ### 資料擴增（如需嘗試）
 
@@ -430,7 +441,7 @@ mllm-music/
 │
 ├── musiccaps_processed.json      # 主資料清單（音頻路徑 + 標注）
 ├── musiccaps_audio/              # 已下載的 .wav 音頻（~1171 筆）
-├── run_eval_compare.py           # 多輪評估比較腳本（含 sample-level std）
+├── run_eval_compare.py           # 評估比較腳本（支援普通 Corpus 評估與 Bootstrap Resampling 自助法估算指標均值與標準差，內含 Sample SD 與 Boot SD 欄位）
 └── outputs/                      # checkpoint + eval 結果（git ignored）
 ```
 
