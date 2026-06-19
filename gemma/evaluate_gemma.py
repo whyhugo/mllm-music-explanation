@@ -27,10 +27,23 @@ Requires transformers >= 5.5.0 (Gemma 4 support). The fairness-critical
 bits — the prompt and the generation hyper-parameters — are kept identical
 to the Qwen evaluation.
 
+This same script also serves the dense Gemma 4 12B variant
+(google/gemma-4-12B-it), which is encoder-free: it projects the raw audio
+waveform directly into the LLM embedding space (no separate audio encoder).
+Its multimodal API is identical to E4B, so only --model_id changes.
+
 Usage (run from project root)
 -----------------------------
-# Zero-shot baseline on the canonical held-out test split
+# E4B zero-shot baseline on the canonical held-out test split (exp-007)
 python gemma/evaluate_gemma.py
+
+# Gemma 4 12B (encoder-free, raw-waveform) variant (exp-008).
+# 12B is dense ~12B params (~24GB bf16); on a 24GB GPU drop to --num_beams 1
+# to avoid OOM from beam search.
+python gemma/evaluate_gemma.py \
+    --model_id google/gemma-4-12B-it \
+    --num_beams 1 \
+    --output outputs/eval_gemma4_12b_baseline_test.json
 
 # Custom split / output
 python gemma/evaluate_gemma.py \
@@ -53,21 +66,19 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_MODEL_ID = "google/gemma-4-E4B-it"
 MUSIC_PROMPT = "Please describe this music in detail and list its aspects."
 
-# Generation hyper-parameters mirror evaluate_qwen.py:generate_caption so the
-# two models are compared under the same decoding regime.
-GEN_KWARGS = dict(
-    max_new_tokens=256,
-    num_beams=4,
-    do_sample=False,
-    repetition_penalty=1.1,
-)
+# Default generation hyper-parameters mirror evaluate_qwen.py:generate_caption
+# so the two model families are compared under the same decoding regime.
+# Overridable via CLI (--num_beams / --max_new_tokens) — useful for the dense
+# 12B variant, where num_beams=4 may OOM on a 24 GB GPU (drop to --num_beams 1).
+DEFAULT_NUM_BEAMS = 4
+DEFAULT_MAX_NEW_TOKENS = 256
 
 
 # =====================================================================
 # Inference
 # =====================================================================
 @torch.no_grad()
-def generate_caption(model, processor, abs_wav_path: str) -> str:
+def generate_caption(model, processor, abs_wav_path: str, gen_kwargs: dict) -> str:
     """Run Gemma 4 on one audio clip and return the cleaned caption text."""
     messages = [
         {
@@ -88,7 +99,7 @@ def generate_caption(model, processor, abs_wav_path: str) -> str:
     ).to(model.device)
 
     input_len = inputs["input_ids"].shape[-1]
-    generated = model.generate(**inputs, **GEN_KWARGS)
+    generated = model.generate(**inputs, **gen_kwargs)
 
     # Decode only the newly generated tokens, then strip Gemma response markers.
     response = processor.decode(generated[0][input_len:], skip_special_tokens=False)
@@ -138,7 +149,24 @@ def main():
         "--limit", type=int, default=None,
         help="Optional cap on number of samples (for a quick smoke test).",
     )
+    parser.add_argument(
+        "--num_beams", type=int, default=DEFAULT_NUM_BEAMS,
+        help="Beam-search width (default 4, matching the Qwen eval). "
+             "Set to 1 for the 12B variant if beam search OOMs on a 24 GB GPU.",
+    )
+    parser.add_argument(
+        "--max_new_tokens", type=int, default=DEFAULT_MAX_NEW_TOKENS,
+        help="Max generated tokens per caption (default 256).",
+    )
     args = parser.parse_args()
+
+    gen_kwargs = dict(
+        max_new_tokens=args.max_new_tokens,
+        num_beams=args.num_beams,
+        do_sample=False,
+        repetition_penalty=1.1,
+    )
+    print(f"Decoding: {gen_kwargs}")
 
     print(f"Loading processor from: {args.model_id}")
     processor = AutoProcessor.from_pretrained(args.model_id)
@@ -164,7 +192,7 @@ def main():
             print(f"[skip] missing audio: {abs_path}")
             continue
         try:
-            generated = generate_caption(model, processor, abs_path)
+            generated = generate_caption(model, processor, abs_path, gen_kwargs)
             results.append(
                 {
                     "wav_path"            : item["wav_path"],
