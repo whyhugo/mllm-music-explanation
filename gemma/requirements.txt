@@ -3,6 +3,7 @@
 transformers>=5.5.0
 torch
 torchaudio
+torchvision      # Gemma 4 processor imports torchvision at load time (it is also a vision model)
 librosa          # Gemma processor decodes audio files via librosa
 accelerate       # device_map="auto"
 tqdm

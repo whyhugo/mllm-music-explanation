@@ -93,12 +93,24 @@ def generate_caption(model, processor, abs_wav_path: str) -> str:
     # Decode only the newly generated tokens, then strip Gemma response markers.
     response = processor.decode(generated[0][input_len:], skip_special_tokens=False)
     parsed = processor.parse_response(response)
-    # parse_response may return a string or a structured object depending on
-    # the transformers version; normalise to a clean string.
+    return _to_text(parsed)
+
+
+def _to_text(parsed) -> str:
+    """
+    Normalise processor.parse_response() output to a plain caption string.
+
+    Gemma 4's parse_response returns a chat-message dict
+    {"role": "assistant", "content": "<caption>"} (and may return a list of
+    such messages). Pull out the assistant content; fall back gracefully.
+    """
     if isinstance(parsed, str):
         return parsed.strip()
     if isinstance(parsed, dict):
-        return str(parsed.get("text", parsed)).strip()
+        content = parsed.get("content", parsed.get("text", parsed))
+        return _to_text(content)
+    if isinstance(parsed, (list, tuple)):
+        return " ".join(_to_text(p) for p in parsed).strip()
     return str(parsed).strip()
 
 
