@@ -729,5 +729,78 @@
       "Val loss improvement is marginal (1.69%) despite 3× training data",
       "Augmentation via same-caption pitch shift is less effective than truly new music data"
     ]
+  },
+  {
+    "id": "exp-007",
+    "date": "2026-06-19",
+    "name": "gemma4-e4b-audio-zeroshot-baseline",
+    "status": "planned",
+    "description": "Cross-model research baseline: zero-shot (no fine-tuning) captioning with Google's Gemma 4 E4B multimodal model, which has a native audio encoder. Evaluated on the same canonical held-out MusicCaps test split as the Qwen2-Audio experiments so the two model families are directly comparable. Establishes where an off-the-shelf audio LLM from a different family sits relative to the Qwen2-Audio baseline and our LoRA fine-tunes.",
+    "model": {
+      "base": "google/gemma-4-E4B-it",
+      "type": "multimodal (text/audio/image/video), native audio encoder",
+      "fine_tuning": "none (zero-shot)",
+      "transformers_min_version": "5.5.0",
+      "model_class": "AutoModelForMultimodalLM"
+    },
+    "dataset": {
+      "eval_set": "data/musiccaps_test.json",
+      "note": "same held-out test split used for the Qwen baseline (eval_baseline_test.json)"
+    },
+    "inference": {
+      "prompt": "Please describe this music in detail and list its aspects.",
+      "max_new_tokens": 256,
+      "num_beams": 4,
+      "do_sample": false,
+      "repetition_penalty": 1.1,
+      "note": "prompt and decoding hyper-parameters identical to qwen/evaluate_qwen.py for a fair comparison"
+    },
+    "artifacts": {
+      "eval_script": "gemma/evaluate_gemma.py",
+      "predictions": "outputs/eval_gemma4_baseline_test.json (pending run)"
+    },
+    "evaluation": null,
+    "notes": [
+      "PLANNED: predictions + ROUGE/BLEU/METEOR to be filled in after the eval run.",
+      "google/gemma-4-E4B-it is a gated model — requires HF token + accepted license to download.",
+      "Compare against outputs/eval_baseline_test.json (Qwen2-Audio zero-shot) with compute_metrics_with_std.py."
+    ]
+  },
+  {
+    "id": "exp-008",
+    "date": "2026-06-19",
+    "name": "gemma4-12b-encoderfree-zeroshot-baseline",
+    "status": "planned",
+    "description": "Second cross-model zero-shot baseline: Google's dense Gemma 4 12B (google/gemma-4-12B-it). Unlike the E4B variant (exp-007) and Qwen2-Audio, the 12B is ENCODER-FREE — it projects raw audio waveforms directly into the LLM embedding space via lightweight linear layers, with no separate audio encoder. Evaluated zero-shot on the same held-out MusicCaps test split for a direct comparison of the encoder-free 12B vs the encoder-based E4B vs Qwen2-Audio.",
+    "model": {
+      "base": "google/gemma-4-12B-it",
+      "type": "multimodal, ENCODER-FREE audio (raw waveform → linear projection → LLM embedding)",
+      "params": "~11.95B (dense)",
+      "fine_tuning": "none (zero-shot)",
+      "transformers_min_version": "5.5.0",
+      "model_class": "AutoModelForMultimodalLM"
+    },
+    "dataset": {
+      "eval_set": "data/musiccaps_test.json",
+      "note": "same held-out test split as exp-007 and the Qwen baseline"
+    },
+    "inference": {
+      "prompt": "Please describe this music in detail and list its aspects.",
+      "max_new_tokens": 256,
+      "num_beams": "4 (drop to 1 on a 24GB GPU — 12B dense may OOM under beam search)",
+      "do_sample": false,
+      "repetition_penalty": 1.1,
+      "note": "same prompt as exp-007/Qwen; num_beams may differ for memory — document the value actually used"
+    },
+    "artifacts": {
+      "eval_script": "gemma/evaluate_gemma.py --model_id google/gemma-4-12B-it",
+      "predictions": "outputs/eval_gemma4_12b_baseline_test.json (pending run)"
+    },
+    "evaluation": null,
+    "notes": [
+      "PLANNED: predictions + ROUGE/BLEU/METEOR to be filled in after the eval run.",
+      "VRAM: ~12B in bf16 ≈ 24GB — borderline on a 24GB 3090; use --num_beams 1 (and consider 4-bit) if OOM.",
+      "Architecture contrast vs exp-007: encoder-free (raw waveform) vs USM-style audio encoder."
+    ]
   }
 ]

@@ -1,0 +1,11 @@
+# Gemma 4 E4B (audio) zero-shot baseline — extra deps on top of the repo root env.
+# Gemma 4 multimodal support landed in transformers 5.5.0.
+transformers>=5.5.0
+torch
+torchaudio
+torchvision      # Gemma 4 processor imports torchvision at load time (it is also a vision model)
+librosa          # Gemma processor decodes audio files via librosa
+accelerate       # device_map="auto"
+tqdm
+# Metrics (shared with the Qwen pipeline): see repo-root compute_metrics_with_std.py
+evaluate
