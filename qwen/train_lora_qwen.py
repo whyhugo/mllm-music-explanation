@@ -440,6 +440,40 @@ class SavePeftAdapterCallback(TrainerCallback):
 
 
 # =====================================================================
+# 3d. Trainer subclass: skip saving the 16 GB frozen base model
+# =====================================================================
+class LoraTrainer(Trainer):
+    """
+    Stops Trainer from writing the full ~16 GB `model.safetensors` on every
+    checkpoint.
+
+    Why this is needed
+    ------------------
+    The model handed to Trainer is the full Qwen2AudioForConditionalGeneration
+    (≈7 B params, frozen). Only `model.model.language_model` is a PeftModel,
+    so HF Trainer's default `_save` serialises the *entire* state dict —
+    including the frozen base weights — into a 16 GB file, once per epoch.
+
+    The only weights that actually change (LoRA adapter + multi_modal_projector)
+    are already persisted by SavePeftAdapterCallback (~86 MB total), and
+    evaluate_qwen.py loads from that PEFT adapter format. The 16 GB file is
+    therefore 100 % redundant.
+
+    Overriding `_save` to skip it (while still writing training_args.bin so the
+    directory remains a valid checkpoint) shrinks each checkpoint from ~16 GB
+    to ~86 MB. Combined with save_only_model=True (no optimizer.pt), the full
+    run's footprint drops from ~368 GB to ~2 GB.
+    """
+
+    def _save(self, output_dir: str = None, state_dict=None):
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
+        os.makedirs(output_dir, exist_ok=True)
+        # Persist args only — adapter + projector are saved by the callback.
+        torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+        print(f"[LoraTrainer] Skipped full base-model save (adapter handled by callback) → {output_dir}")
+
+
+# =====================================================================
 # 4. Model setup
 # =====================================================================
 def build_model(model_id: str):
@@ -531,6 +565,7 @@ def main():
         # ── Checkpointing ────────────────────────────────────────────────────
         save_strategy="epoch",
         save_total_limit=None,                # keep ALL checkpoints (best ep may be early)
+        save_only_model=True,                 # skip optimizer.pt (~169MB/ckpt); no resume needed
         # ── Evaluation ───────────────────────────────────────────────────────
         eval_strategy="epoch" if val_dataset else "no",
         per_device_eval_batch_size=1,         # explicit; one val sample at a time
@@ -543,7 +578,7 @@ def main():
         report_to="tensorboard",
     )
 
-    trainer = Trainer(
+    trainer = LoraTrainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
