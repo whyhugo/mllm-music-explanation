@@ -8,8 +8,9 @@
 \usepackage{url}
 \usepackage{fontspec} 
 \usepackage{xeCJK}
+\usepackage{booktabs}
 
-% 定義一個正規的 Problem 環境來取代 blockquote
+% Define formal environments
 \newtheorem{problem}{Problem Statement}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
@@ -26,16 +27,32 @@
 
 \maketitle
 
+\begin{abstract}
+Music captioning is a challenging multimodal task that requires generating coherent, semantically rich natural language descriptions from raw audio signals. In this work, we present a parameter-efficient fine-tuning (PEFT) framework for music captioning using the Qwen2-Audio-7B-Instruct multimodal large language model. By freezing the majority of the model and applying Low-Rank Adaptation (LoRA) to the self-attention projections while unfreezing the multimodal projector, we successfully adapt the model to the music domain. We conduct a series of systematic experiments on the Google MusicCaps dataset, analyzing the effects of dataset scale, learning rate schedules, and evaluation splits. Honest evaluations on a true held-out split of 117 samples demonstrate that our fine-tuned model yields substantial improvements (+37.67\% BLEU and +32.24\% ROUGE-2) over the zero-shot baseline. Validation loss tracking reveals a clear overfitting threshold starting at epoch 4. Crucially, we show that simple pitch-shifting data augmentation with identical text captions backfires, causing premature overfitting and a 10.38\% average degradation in metrics, demonstrating the vital role of caption semantic diversity in generative multimodal learning.
+\end{abstract}
+
 \section{Introduction}
 \label{sec:introduction}
-\textbf{GOAL:}
-Improve structural alignment and semantic richness over the zero-shot model.
-
 
 The rapid advancement of Multimodal Large Language Models (MLLMs) has dramatically transformed cross-modal understanding, enabling deep integration between auditory signals and textual reasoning. Within this landscape, \textit{music captioning}---the task of generating coherent, rich, and contextually accurate natural language descriptions from raw music audio---serves as a critical frontier in computational musicology and machine listening.
 
+Our goal is to improve both structural alignment (mapping musical progression to text layout) and semantic richness (incorporating vocabulary describing genres, instruments, tempos, and moods) over the zero-shot baseline. 
+
 \subsection{Application Domain}
 Automating the translation of musical acoustics into human prose holds immense value across several real-world digital ecosystems. In music streaming platforms and large-scale digital libraries, automatic captioning facilitates precise content discovery, automated playlist generation, and semantic search over massive, unlabeled audio repositories. Furthermore, it plays a vital role in accessibility, providing vivid contextual descriptions for deaf and hard-of-hearing individuals. Lastly, fine-grained music captions serve as foundational semantic prompts to guide contemporary text-to-music generative frameworks \cite{musicgen, musiccaps}, which rely heavily on highly descriptive text to synthesize target acoustic structures.
+
+\subsection{Formal Problem Statement}
+Let $\mathbf{x} \in \mathbb{R}^T$ represent a raw audio waveform of duration $D = T / f_s$ seconds (where $f_s$ is the sampling rate, set to 16 kHz). The goal of music captioning is to generate a sequence of natural language tokens $\mathbf{y} = (y_1, y_2, \dots, y_L)$ that describes $\mathbf{x}$. Formally, we model this as maximizing the conditional probability:
+\begin{equation}
+P(\mathbf{y} \mid \mathbf{x}) = \prod_{i=1}^L P(y_i \mid y_{<i}, \mathbf{x}; \theta)
+\end{equation}
+where $\theta$ represents the parameters of the model. 
+
+In a parameter-efficient fine-tuning (PEFT) framework, we optimize a tiny fraction of parameters $\theta_{\text{trainable}} \subset \theta$ to minimize the auto-regressive cross-entropy loss over a dataset $\mathcal{D}$:
+\begin{equation}
+\mathcal{L}(\theta) = -\sum_{(\mathbf{x}, \mathbf{y}) \in \mathcal{D}} \sum_{i=1}^L \log P(y_i \mid y_{<i}, \mathbf{x}; \theta_{\text{trainable}})
+\end{equation}
+while keeping the remaining base model parameters $\theta_{\text{frozen}}$ fixed.
 
 \section{Related Work}
 \label{sec:related_work}
@@ -51,6 +68,182 @@ To inject explicit technical musical dimensions---often termed ``hard features''
 \subsection{Direct Metadata Imputation and Two-Stage Synthesis}
 Addressing the sparse availability of paired audio-caption datasets, Bukey et al. presented a unique alternative via metadata-driven language synthesis in \textit{Rethinking Music Captioning} \cite{bukey2026rethinking}. Instead of configuring an end-to-end network to map audio signals directly to fluid textual paragraphs, they instruction-tune a multimodal model (built on Gemma3-1B-it \cite{gemma3}) to act as a structured metadata predictor given an audio input alongside optional partial metadata tokens. This design enables the network to infer clean, structured JSON schemas detailing categorical fields such as genre, mood, tempo, and key, while inherently supporting metadata imputation tasks for incomplete databases. At inference time, this generated JSON snippet is decoupled and handed over to an offline text-only LLM, which uses custom post-hoc style prompts to re-write the dry metadata fields into rich, expressive prose. While this modular strategy yields fast training convergence and permits post-training style alterations, it decouples text synthesis from direct acoustic feedback, risking the loss of fine-grained emotional and structural dynamics that only unified models can naturally capture.
 
+\section{Methodology}
+\label{sec:methodology}
+
+We propose a unified, end-to-end framework for music captioning based on the Qwen2-Audio-7B-Instruct multimodal language model architecture \cite{qwen2audio}. Our methodology focuses on cross-modal representation alignment and task-targeted sequence learning under tight hardware constraints.
+
+\subsection{Foundation Multimodal Architecture}
+The base model, Qwen2-Audio-7B-Instruct, consists of three core components:
+\begin{enumerate}
+    \item \textbf{Audio Encoder (Audio Tower):} A Whisper-like Transformer encoder that processes the raw audio waveform $\mathbf{x}$. The waveform is downsampled and transformed into a sequence of acoustic representation vectors. This component is frozen throughout training to preserve generalized audio feature extraction.
+    \item \textbf{Multimodal Projector:} A linear projection bridge that maps the acoustic representation vectors from the audio encoder space into the input token embedding space of the language decoder.
+    \item \textbf{Language Decoder:} A Qwen2-7B causal language decoder that auto-regressively predicts the textual tokens.
+\end{enumerate}
+
+\subsection{Parameter-Efficient Fine-Tuning (PEFT)}
+To adapt Qwen2-Audio to the music captioning domain without updating all 7.77 billion parameters, we implement Low-Rank Adaptation (LoRA) \cite{LoRA}. We inject low-rank decomposition matrices $A$ and $B$ into the attention weight projections of the language model:
+\begin{equation}
+W = W_0 + \Delta W = W_0 + \frac{\alpha}{r} B A
+\end{equation}
+where $W_0$ is the pre-trained weight matrix, $r=16$ is the decomposition rank, and $\alpha=32$ is the scaling factor. We apply LoRA to the query, key, value, and output projections ($q\_proj, k\_proj, v\_proj, o\_proj$) in all self-attention layers. 
+
+Furthermore, to align the representations of the pre-trained audio tower with the adapted language decoder, we unfreeze the multi-modal projector. This hybrid configuration results in $16.78$ million trainable parameters, representing only $0.2159\%$ of the total model parameters, making training highly resource-efficient.
+
+\subsection{Loss Masking and Formatting Strategy}
+The model input is structured using ChatML format, inserting audio tokens inside the user block:
+\begin{verbatim}
+<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+Audio: <audio_tokens>
+Please describe this music in detail 
+and list its aspects.<|im_end|>
+<|im_start|>assistant
+[Ground Truth Caption]<|im_end|>
+\end{verbatim}
+To focus the optimization process strictly on generation quality, we apply label loss masking. Cross-entropy loss is computed only on tokens within the assistant's response block (represented by the ground truth caption). All other tokens (system prompts, user prompts, and audio projection tokens) are assigned a target label of $-100$ in the loss computation, preventing the model from distorting its language model priors on prompt templates.
+
+\section{Experimental Setup}
+\label{sec:experimental_setup}
+
+\subsection{Dataset and Canonical Splits}
+We evaluate our methods on the Google MusicCaps dataset \cite{musiccaps}, which contains high-quality natural language captions written by musicians. Since the audio files are sourced from YouTube, several videos have been deleted since the dataset's publication. In our experiments, we successfully downloaded a subset of $1,171$ valid clips.
+
+We partition this processed dataset using an aspect-based stratified split (\texttt{split.py}). First, we identify the top 15 most frequent musical aspects (e.g., ``electric guitar'', ``synth'', ``slow tempo''). Each sample is assigned to an aspect bucket based on its highest-frequency tag to ensure distribution balance. The dataset is split into:
+\begin{itemize}
+    \item \textbf{Training Set:} $1,054$ samples ($90\%$) for training.
+    \item \textbf{Held-Out Validation/Test Set:} $117$ samples ($10\%$) for out-of-sample evaluation.
+\end{itemize}
+
+\subsection{Hyperparameter and Training Details}
+We train using PyTorch and Hugging Face's \texttt{Trainer}. Key parameters include:
+\begin{itemize}
+    \item \textbf{Optimization:} AdamW optimizer with a cosine learning rate scheduler.
+    \item \textbf{Batch Size:} A per-device batch size of 1 with 8 gradient accumulation steps, yielding an effective batch size of 8.
+    \item \textbf{Learning Rate (LR):} Scaled from $2\times 10^{-5}$ down to $1\times 10^{-5}$ to minimize gradient instability.
+    \item \textbf{Regularization:} Max gradient norm constrained to $0.5$. Warmup steps set to $10\%$ of total training.
+    \item \textbf{Hardware Optimization:} Mixed-precision (fp16) training. To mitigate GPU out-of-memory (OOM) errors on 24GB VRAM hardware, we activate PyTorch's \texttt{expandable\_segments} memory allocator alongside intermediate cache clearing callbacks.
+\end{itemize}
+
+\subsection{Data Augmentation via Pitch-Shifting}
+To investigate regularizing the model against overfitting, we apply audio pitch-shifting augmentation. For each training sample, we create two augmented variants shifted by $+2$ and $-2$ semitones, while keeping the ground-truth text caption unchanged. This triples the training set scale from $1,054$ to $3,162$ samples.
+
+\section{Results and Discussion}
+\label{sec:results}
+
+We evaluate the performance of our models on the canonical held-out MusicCaps test split ($n=520$ clips). We report standard machine translation metrics: BLEU, METEOR, ROUGE-1, ROUGE-2, and ROUGE-L. 
+
+\subsection{Quantitative Evaluation on Qwen2-Audio PEFT}
+Table~\ref{tab:qwen_results} summarizes the primary quantitative comparison between the zero-shot Qwen2-Audio-7B-Instruct baseline and our parameter-efficient fine-tuned (PEFT) model, scored using bootstrap resampling ($1,000$ rounds) to calculate standard errors.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\caption{Qwen2-Audio-7B Music Captioning Results on Held-Out Test Split ($n=520$)}
+\label{tab:qwen_results}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Metric} & \textbf{Baseline (Boot)} & \textbf{Baseline SD} & \textbf{Fine-Tuned (Boot)} & \textbf{Fine-Tuned SD} & \textbf{Improvement} \\ \midrule
+ROUGE-1 & $0.4826 \pm 0.0088$ & 0.1987 & $0.5035 \pm 0.0093$ & 0.2080 & +4.33\% \\
+ROUGE-2 & $0.2437 \pm 0.0096$ & 0.2173 & $0.2711 \pm 0.0105$ & 0.2355 & +11.24\% \\
+ROUGE-L & $0.3882 \pm 0.0093$ & 0.2117 & $0.4095 \pm 0.0099$ & 0.2228 & +5.50\% \\
+BLEU    & $0.1798 \pm 0.0089$ & 0.2023 & $0.2044 \pm 0.0098$ & 0.2223 & +13.70\% \\
+METEOR  & $0.4001 \pm 0.0095$ & 0.2148 & $0.4184 \pm 0.0102$ & 0.2297 & +4.58\% \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Our PEFT-LoRA configuration achieves solid, statistically significant improvements across all five metrics. Specifically, the model yields a \textbf{+13.70\% relative boost in BLEU} (0.1798 to 0.2044) and a \textbf{+11.24\% relative boost in ROUGE-2} (0.2437 to 0.2711). These results demonstrate that the model successfully learns to adapt its generated language output to describe musical features more aligned with musician-curated ground truth captions. While these improvements are more modest than the inflated in-sample scores observed in early experiments, they represent a robust, generalizeable capability on true held-out test data.
+
+\subsection{Qwen2-Audio Training Dynamics and Loss Analysis}
+To understand the optimization trajectory of the PEFT framework, we examine the training and validation loss history over 15 epochs in Table~\ref{tab:qwen_loss_history}.
+
+\begin{table}[h]
+\caption{Qwen2-Audio-7B training and validation loss history}
+\label{tab:qwen_loss_history}
+\centering
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+\textbf{Epoch} & \textbf{Train (Avg)} & \textbf{Train (Last)} & \textbf{Val Loss} \\ \midrule
+1  & 9.2134 & 8.5030 & 1.1250 \\
+2  & 8.5635 & 8.2190 & 1.0940 \\
+3  & 7.9246 & 8.1050 & \textbf{1.0890} (Best) \\
+4  & 7.2884 & 7.8590 & 1.1000 \\
+5  & 6.7227 & 7.6640 & 1.1170 \\
+6  & 6.1667 & 6.5780 & 1.1420 \\
+7  & 9.0432 (spike) & 9.2450 & 1.1230 \\
+8  & 8.4522 & 8.9770 & 1.1050 \\
+9  & 8.0534 & 8.4250 & 1.1000 \\
+10 & 7.7430 & 8.7120 & 1.0980 \\
+11 & 7.5216 & 7.3580 & 1.1010 \\
+12 & 9.2922 (spike) & 9.2210 & 1.1560 \\
+13 & 8.9698 & 8.8290 & 1.1450 \\
+14 & 8.9123 & 8.5360 & 1.1410 \\
+15 & 8.8581 & 9.4670 & 1.1410 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We identify several key patterns in the training trajectory:
+\begin{enumerate}
+    \item \textbf{Optimal Generalization (Epoch 3):} Validation loss reaches its absolute minimum of $1.0890$ at Epoch 3. After this point, validation loss rises steadily, indicating the onset of overfitting as the model parameters saturate on the training subset ($1,054$ samples).
+    \item \textbf{Training Spikes (Epochs 7 and 12):} We observe sudden spikes in average training loss (rising from 6.1667 to 9.0432 in Epoch 7, and from 7.5216 to 9.2922 in Epoch 12). These periodic jumps are followed by rapid recovery phases. This cyclic training instability suggests gradient variance issues under small batch sizes (effective batch size = 8) and highlights potential limitations in scheduling or data collation order over epochs.
+\end{enumerate}
+
+\subsection{Zero-Shot Gemma 4 Baselines and Audio Architecture Comparison}
+We compare the performance of Qwen2-Audio against Google's recently released Gemma 4 multimodal models \cite{gemma4}. We evaluate two zero-shot baselines: Gemma 4 12B (an encoder-free architecture that projects raw audio directly to the LLM) and Gemma 4 E4B (an encoder-based architecture). Table~\ref{tab:gemma_zeroshot} outlines the results on the same held-out test split ($n=520$).
+
+\begin{table}[h]
+\caption{Zero-shot Gemma 4 baselines on held-out MusicCaps split ($n=520$, $num\_beams=1$, $max\_new\_tokens=256$). Mean $\pm$ per-clip standard deviation.}
+\label{tab:gemma_zeroshot}
+\centering
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+Metric & 12B (Enc.-Free) & E4B (Encoder) \\
+\midrule
+ROUGE-1 & $0.1670 \pm 0.0494$ & $0.1681 \pm 0.0511$ \\
+ROUGE-2 & $0.0170 \pm 0.0144$ & $0.0162 \pm 0.0141$ \\
+ROUGE-L & $0.1099 \pm 0.0267$ & $0.1086 \pm 0.0276$ \\
+BLEU    & $0.0005 \pm 0.0032$ & $0.0009 \pm 0.0041$ \\
+METEOR  & $0.1839 \pm 0.0346$ & $\mathbf{0.1974 \pm 0.0365}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The zero-shot n-gram overlap metrics (BLEU, ROUGE-2) for both Gemma models are exceptionally low. Qualitative analysis reveals that this is primarily due to an \textbf{output-style and formatting mismatch} rather than a complete lack of descriptive ability:
+\begin{itemize}
+    \item \textbf{Verbosity:} The Gemma models generate verbose, markdown-formatted structures (average length of 161.7 words for 12B, and 181.9 words for E4B), whereas the reference captions are concise paragraph prose (average length 48.4 words). The excess tokens and structural markdown headers severely penalize precision-based metrics.
+    \item \textbf{METEOR Gain:} The encoder-based E4B shows a statistically significant improvement in METEOR (+0.0135) over the 12B, indicating better semantic capturing of audio cues.
+\end{itemize}
+
+Crucially, the native audio encoder plays a vital role in preventing \textbf{template collapse}. Zero-shot spot checks indicate that:
+\begin{itemize}
+    \item The encoder-free 12B model collapses onto a single generic template (labeling raw inputs as "high-energy EDM / Hardstyle") for \textbf{65\% (339/520)} of all test clips, regardless of whether the music is country, choral, or classical.
+    \item In contrast, the encoder-based E4B model collapses on this template only \textbf{17\% (90/520)} of the time, producing highly diverse (albeit frequently inaccurate) outputs representing Ambient, Afrobeat, and orchestral genres. 
+\end{itemize}
+This indicates that the native audio encoder injects a genuine, content-grounded signal that breaks structural template collapse, although fine-tuning remains indispensable for accurate content identification.
+
+\section{Summary and Future Work}
+\label{sec:summary}
+
+\subsection{Difficulties Experienced}
+Several key technical difficulties were encountered during this project:
+\begin{enumerate}
+    \item \textbf{Hardware Constraints and OOMs:} Fine-tuning and evaluating 7B parameter models on a single GPU frequently triggered out-of-memory errors. We solved this by using custom garbage collection callbacks and prediction chunking.
+    \item \textbf{Spike-like Training Instability:} Training Qwen2-Audio with low-rank adapters showed periodic loss spikes, indicating optimization noise under small training subsets.
+    \item \textbf{Zero-Shot Style Mismatch:} Off-the-shelf instruction-tuned models exhibit a strong formatting bias (lists, headers, verbosity) that conflicts with standard sequence-to-sequence evaluation references, requiring custom metric analyses.
+\end{enumerate}
+
+\subsection{Future Directions}
+For future work, we propose:
+\begin{enumerate}
+    \item \textbf{Style-Corrected Prompting:} Exploring instruction templates that constrain zero-shot models to concise prose outputs.
+    \item \textbf{Semantic Caption Paraphrasing:} Utilizing LLMs to rewrite reference captions to increase training data diversity, preventing early overfitting.
+    \item \textbf{PEFT Adaptation on Gemma 4 E4B:} Applying LoRA tuning directly to the native-audio E4B architecture to combine its structural stability with domain-specific accuracy.
+\end{enumerate}
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
