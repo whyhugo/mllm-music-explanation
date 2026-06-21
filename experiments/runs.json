@@ -734,7 +734,7 @@
     "id": "exp-007",
     "date": "2026-06-19",
     "name": "gemma4-e4b-audio-zeroshot-baseline",
-    "status": "planned",
+    "status": "completed",
     "description": "Cross-model research baseline: zero-shot (no fine-tuning) captioning with Google's Gemma 4 E4B multimodal model, which has a native audio encoder. Evaluated on the same canonical held-out MusicCaps test split as the Qwen2-Audio experiments so the two model families are directly comparable. Establishes where an off-the-shelf audio LLM from a different family sits relative to the Qwen2-Audio baseline and our LoRA fine-tunes.",
     "model": {
       "base": "google/gemma-4-E4B-it",
@@ -750,27 +750,34 @@
     "inference": {
       "prompt": "Please describe this music in detail and list its aspects.",
       "max_new_tokens": 256,
-      "num_beams": 4,
+      "num_beams": 1,
       "do_sample": false,
       "repetition_penalty": 1.1,
-      "note": "prompt and decoding hyper-parameters identical to qwen/evaluate_qwen.py for a fair comparison"
+      "note": "num_beams=1 to align decoding with exp-008 (12B) for a clean encoder-vs-encoder-free ablation; diverges from Qwen beam=4. Requires torch>=2.6 for the encoder attention."
     },
     "artifacts": {
-      "eval_script": "gemma/evaluate_gemma.py",
-      "predictions": "outputs/eval_gemma4_baseline_test.json (pending run)"
+      "eval_script": "gemma/evaluate_gemma.py --model_id google/gemma-4-E4B-it",
+      "predictions": "outputs/eval_gemma4_baseline_test.json"
     },
-    "evaluation": null,
+    "evaluation": {
+      "eval_samples": 520,
+      "decoding": "num_beams=1, max_new_tokens=256",
+      "scored_with": "compute_metrics_with_std.py (per-clip mean +/- population std)",
+      "metrics_mean": { "ROUGE-1": 0.1681, "ROUGE-2": 0.0162, "ROUGE-L": 0.1086, "BLEU": 0.0009, "METEOR": 0.1974 },
+      "metrics_std": { "ROUGE-1": 0.0511, "ROUGE-2": 0.0141, "ROUGE-L": 0.0276, "BLEU": 0.0041, "METEOR": 0.0365 }
+    },
     "notes": [
-      "PLANNED: predictions + ROUGE/BLEU/METEOR to be filled in after the eval run.",
-      "google/gemma-4-E4B-it is a gated model — requires HF token + accepted license to download.",
-      "Compare against outputs/eval_baseline_test.json (Qwen2-Audio zero-shot) with compute_metrics_with_std.py."
+      "COMPLETED 2026-06-21. Zero-shot encoder-based baseline (native audio encoder).",
+      "Encoder breaks the 12B's template-collapse: generic EDM-template rate drops 65% -> 17% (90/520); outputs diverse but still only ~15-20% genre-accurate on a 20-clip manual check.",
+      "Small but real METEOR gain over encoder-free 12B (+0.0135, ~6 SE); other metrics within noise. Encoder injects audio-dependent signal but is too weak for reliable zero-shot grounding -> motivates fine-tuning.",
+      "See report/gemma_baseline_results.md for the full write-up."
     ]
   },
   {
     "id": "exp-008",
     "date": "2026-06-19",
     "name": "gemma4-12b-encoderfree-zeroshot-baseline",
-    "status": "planned",
+    "status": "completed",
     "description": "Second cross-model zero-shot baseline: Google's dense Gemma 4 12B (google/gemma-4-12B-it). Unlike the E4B variant (exp-007) and Qwen2-Audio, the 12B is ENCODER-FREE — it projects raw audio waveforms directly into the LLM embedding space via lightweight linear layers, with no separate audio encoder. Evaluated zero-shot on the same held-out MusicCaps test split for a direct comparison of the encoder-free 12B vs the encoder-based E4B vs Qwen2-Audio.",
     "model": {
       "base": "google/gemma-4-12B-it",
@@ -787,20 +794,26 @@
     "inference": {
       "prompt": "Please describe this music in detail and list its aspects.",
       "max_new_tokens": 256,
-      "num_beams": "4 (drop to 1 on a 24GB GPU — 12B dense may OOM under beam search)",
+      "num_beams": 1,
       "do_sample": false,
       "repetition_penalty": 1.1,
-      "note": "same prompt as exp-007/Qwen; num_beams may differ for memory — document the value actually used"
+      "note": "num_beams=1 used: 12B dense ~24GB bf16, beam search OOMs on a 24GB GPU. Diverges from Qwen beam=4; matches exp-007 for the encoder ablation."
     },
     "artifacts": {
       "eval_script": "gemma/evaluate_gemma.py --model_id google/gemma-4-12B-it",
-      "predictions": "outputs/eval_gemma4_12b_baseline_test.json (pending run)"
+      "predictions": "outputs/eval_gemma4_12b_baseline_test.json"
     },
-    "evaluation": null,
+    "evaluation": {
+      "eval_samples": 520,
+      "decoding": "num_beams=1, max_new_tokens=256",
+      "scored_with": "compute_metrics_with_std.py (per-clip mean +/- population std)",
+      "metrics_mean": { "ROUGE-1": 0.1670, "ROUGE-2": 0.0170, "ROUGE-L": 0.1099, "BLEU": 0.0005, "METEOR": 0.1839 },
+      "metrics_std": { "ROUGE-1": 0.0494, "ROUGE-2": 0.0144, "ROUGE-L": 0.0267, "BLEU": 0.0032, "METEOR": 0.0346 }
+    },
     "notes": [
-      "PLANNED: predictions + ROUGE/BLEU/METEOR to be filled in after the eval run.",
-      "VRAM: ~12B in bf16 ≈ 24GB — borderline on a 24GB 3090; use --num_beams 1 (and consider 4-bit) if OOM.",
-      "Architecture contrast vs exp-007: encoder-free (raw waveform) vs USM-style audio encoder."
+      "COMPLETED 2026-06-21. Zero-shot encoder-free baseline (raw waveform -> linear projection).",
+      "Genre grounding fails: defaults to a generic high-energy EDM/Hardstyle template for 65% (339/520) of clips regardless of true content; ~15-20% genre match on a 20-clip manual check.",
+      "Architecture contrast vs exp-007 (encoder): see report/gemma_baseline_results.md."
     ]
   }
 ]
