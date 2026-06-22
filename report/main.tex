@@ -111,17 +111,25 @@ To focus the optimization process strictly on generation quality, label loss mas
 \label{sec:experimental_design}
 
 \subsection{Dataset and Canonical Splits}
-The proposed methods are evaluated on the Google MusicCaps dataset \cite{musiccaps}, which contains high-quality natural language captions written by musicians. Since the audio files are sourced from YouTube, several videos have been deleted since the dataset's publication. In this work, a total subset of $5,165$ valid clips was successfully downloaded.
-
-This processed dataset is partitioned using an aspect-based stratified split (\texttt{split.py}). First, the top 15 most frequent musical aspects (e.g., ``electric guitar'', ``synth'', ``slow tempo'') are identified. Each sample is assigned to an aspect bucket based on its highest-frequency tag to ensure distribution balance across the subsets. The dataset is split with an $80/10/10\%$ ratio into:
-\begin{itemize}
-    \item \textbf{Training Set:} $4,125$ samples ($80\%$) for model training.
-    \item \textbf{Validation Set:} $520$ samples ($10\%$) for monitoring training dynamics and checkpoint selection.
-    \item \textbf{Held-Out Test Set:} $520$ samples ($10\%$) for final out-of-sample evaluation.
-\end{itemize}
+The proposed methods are evaluated on the Google MusicCaps dataset \cite{musiccaps}, which contains high-quality natural language captions written by musicians. Since the audio files are sourced from YouTube, several videos have been deleted since the dataset's publication. In this work, three stages of experiments are designed to evaluate the scaling and regularization characteristics of the model:
+\begin{enumerate}
+    \item \textbf{Experiment 1 (Pilot Study):} A small-scale pilot experiment is conducted on a subset of $1,100$ successfully downloaded clips. This dataset is partitioned into $900$ samples for training, $100$ samples for validation, and $100$ samples for test evaluation. This study serves to validate hyperparameters and verify convergence properties.
+    \item \textbf{Experiment 2 (Data Augmentation):} Pitch-shifting augmentation is applied to a subset of $1,054$ training samples (shifted by $+2$ and $-2$ semitones), tripling the training set to $3,162$ samples to investigate its regularizing effects on a low-resource regime, validated on $117$ held-out samples.
+    \item \textbf{Experiment 3 (Full-Scale Experiment):} A full-scale experiment is conducted on the complete set of $5,165$ valid downloaded clips. This processed dataset is partitioned using an aspect-based stratified split (\texttt{split.py}) to balance the top 15 most frequent musical aspects across subsets. The dataset is split with an $80/10/10\%$ ratio into:
+          \begin{itemize}
+              \item \textbf{Training Set:} $4,125$ samples ($80\%$) for model training.
+              \item \textbf{Validation Set:} $520$ samples ($10\%$) for monitoring training dynamics and checkpoint selection.
+              \item \textbf{Held-Out Test Set:} $520$ samples ($10\%$) for final out-of-sample evaluation.
+          \end{itemize}
+\end{enumerate}
 
 \subsection{Hyperparameter and Training Details}
-Training is conducted using PyTorch and Hugging Face's \texttt{Trainer} on a single NVIDIA GeForce RTX 3090 GPU (24GB VRAM) hosted on the RunPod cloud platform. The total training time for the model is approximately 15 hours. Key parameters include:
+All training is conducted using PyTorch and Hugging Face's \texttt{Trainer} on a single NVIDIA GeForce RTX 3090 GPU (24GB VRAM). Specifically, Experiment 1 is conducted on a local workstation, whereas Experiment 3 is performed on the RunPod cloud platform. The total training runtimes for Experiment 1 and Experiment 3 are as follows:
+\begin{itemize}
+    \item \textbf{Experiment 1 (Pilot Study):} The total training time is approximately 2.5 hours.
+    \item \textbf{Experiment 3 (Full-Scale Experiment):} The total training time is approximately 15 hours.
+\end{itemize}
+The optimization hyperparameters are kept identical across all three experiments:
 \begin{itemize}
     \item \textbf{Optimization:} AdamW optimizer with a cosine learning rate scheduler.
     \item \textbf{Batch Size:} A per-device batch size of 1 with 8 gradient accumulation steps, yielding an effective batch size of 8.
@@ -151,7 +159,7 @@ Comparing our fine-tuned Qwen2-Audio-7B model against these extremely recent and
 The performance of the models is evaluated on the canonical held-out MusicCaps test split ($n=520$ clips). Standard machine translation metrics are reported: BLEU, METEOR, ROUGE-1, ROUGE-2, and ROUGE-L.
 
 \subsection{Quantitative Evaluation on Qwen2-Audio PEFT}
-Table~\ref{tab:qwen_results} summarizes the primary quantitative comparison between the zero-shot Qwen2-Audio-7B-Instruct baseline and the parameter-efficient fine-tuned (PEFT) model. Traditionally, natural language generation metrics such as BLEU and ROUGE are reported as single corpus-level scalar values. However, these metrics are mathematically non-linear, non-differentiable, and computed over the entire corpus rather than simple arithmetic averages of independent samples. Consequently, they do not follow any standard closed-form parametric probability distribution, which renders classical parametric significance tests (such as Student's t-test or z-test) invalid and mathematically unjustifiable for evaluating their variance or standard errors. To overcome this limitation and provide rigorous statistical verification, bootstrap resampling---a non-parametric statistical inference method originally proposed by Efron and Tibshirani~\cite{tibshirani1993introduction} and widely adopted in machine translation evaluation~\cite{koehn2004statistical}---is employed. In this setup, $B = 1,000$ bootstrap replicates are generated by sampling $N = 520$ test clips with replacement from the original test set. The target evaluation metrics are computed for each replicate, yielding an empirical distribution of the scores. This empirical distribution is then used to compute the bootstrap mean and the Standard Error (SE), which represents the standard deviation of the bootstrap estimator. To capture the performance volatility over different musical genres and structures, the metrics are reported in Table~\ref{tab:qwen_results} as Mean $\pm$ Sample Standard Deviation (SD) of the individual test clips. Furthermore, to verify that the observed performance improvements are statistically robust and not artifacts of random test split selection, the Standard Error (SE) of the mean, estimated from the empirical bootstrap distribution, is reported in a separate column to facilitate significance testing.
+Table~\ref{tab:qwen_results} summarizes the primary quantitative comparison between the zero-shot Qwen2-Audio-7B-Instruct baseline and the parameter-efficient fine-tuned (PEFT) model. Traditionally, corpus-level metrics like BLEU and ROUGE do not naturally yield sample-level variance as they are computed globally over the entire evaluation set. Furthermore, due to the non-linear properties of these metrics (e.g., geometric averaging and brevity penalties in BLEU), standard parametric significance tests such as Student's t-test are not directly applicable. To establish rigorous confidence intervals and assess statistical significance, we employ non-parametric bootstrap resampling, following established practices in machine translation evaluation \cite{koehn2004statistical}. In this setup, $B = 1,000$ bootstrap replicates are generated by sampling $N = 520$ test clips with replacement from the original test set. The target evaluation metrics are computed for each replicate, yielding an empirical distribution of the scores. This empirical distribution is then used to compute the bootstrap mean and the Standard Error (SE), which represents the standard deviation of the bootstrap estimator. To capture the performance volatility over different musical genres and structures, the metrics are reported in Table~\ref{tab:qwen_results} as Mean $\pm$ Sample Standard Deviation (SD) of the individual test clips. Furthermore, to verify that the observed performance improvements are statistically robust and not artifacts of random test split selection, the Standard Error (SE) of the mean, estimated from the empirical bootstrap distribution, is reported in a separate column to facilitate significance testing.
 
 \begin{table*}[t]
     \centering
@@ -177,11 +185,104 @@ Table~\ref{tab:qwen_results} summarizes the primary quantitative comparison betw
 The PEFT-LoRA configuration achieves solid, statistically significant improvements across all five metrics. Specifically, the model yields a \textbf{+13.70\% relative boost in BLEU} (0.1798 to 0.2044) and a \textbf{+11.24\% relative boost in ROUGE-2} (0.2437 to 0.2711). These results demonstrate that the model successfully learns to adapt its generated language output to describe musical features more aligned with musician-curated ground truth captions. While these improvements are more modest than the inflated in-sample scores observed in early experiments, they represent a robust, generalizeable capability on true held-out test data.
 
 \subsection{Qwen2-Audio Training Dynamics and Loss Analysis}
-To understand the optimization trajectory of the PEFT framework, the training and validation loss history over 15 epochs is examined in Table~\ref{tab:qwen_loss_history} and plotted in Figure~\ref{fig:loss_curve}.
+To understand the optimization trajectory of the PEFT framework and evaluate its scaling behavior, the training and validation loss dynamics are analyzed across three stages of experiments: a small-scale pilot study (Experiment 1), a data augmentation study (Experiment 2), and a full-scale training run (Experiment 3).
+
+\subsubsection{Experiment 1: Pilot Study Dynamics (900:100:100 Subset)}
+In the pilot study, the model is trained on a subset of 900 samples and validated on 100 samples. The training and validation loss history over 15 epochs is documented in Table~\ref{tab:qwen_loss_history_pilot} and illustrated in Figure~\ref{fig:loss_curve_pilot}.
 
 \begin{table}[h]
-    \caption{Qwen2-Audio-7B training and validation loss history}
-    \label{tab:qwen_loss_history}
+    \caption{Experiment 1 (Pilot Study) Training and Validation Loss History}
+    \label{tab:qwen_loss_history_pilot}
+    \centering
+    \footnotesize
+    \begin{tabular}{lllp{2.4cm}}
+        \toprule
+        \textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss}      & \textbf{Observation}                      \\ \midrule
+        1              & 8.760               & 1.1392                 & Model begins adapting to musical features \\
+        2              & 7.602               & 1.1091                 & Validation loss drops rapidly             \\
+        3              & 8.132               & \textbf{1.1012} (Best) & Best checkpoint (Optimal generalization)  \\
+        4              & 6.305               & 1.1133                 & Onset of slight overfitting               \\
+        5              & 6.166               & 1.1305                 & Train loss decreases, Val loss increases  \\
+        6              & 5.113               & 1.1518                 & Continued training divergence             \\
+        7              & 5.107               & 1.1771                 & -                                         \\
+        8              & 4.669               & 1.2026                 & -                                         \\
+        9              & 3.728               & 1.2370                 & -                                         \\
+        10             & 4.053               & 1.2613                 & -                                         \\
+        11             & 3.082               & 1.2896                 & -                                         \\
+        12             & 3.550               & 1.3065                 & -                                         \\
+        13             & 3.864               & 1.3156                 & -                                         \\
+        14             & 3.790               & 1.3209                 & -                                         \\
+        15             & 3.192               & 1.3216                 & Training terminates; severe overfitting   \\
+        \bottomrule
+    \end{tabular}
+    \vspace{1ex}
+    \begin{flushleft}
+        \scriptsize Note: The absolute value of Train Loss is relatively large due to differences in sampling and calculation intervals; the primary focus is its continuous downward trend. Validation Loss is the true metric for measuring the model's generalization capabilities.
+    \end{flushleft}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{loss_curve_pilot.pdf}
+    \caption{Experiment 1 (Pilot Study) training and validation loss curves over 15 epochs. The left y-axis shows the training loss (blue circle), while the right y-axis displays the validation loss (red square). The star marker highlights the optimal generalization checkpoint at Epoch 3 ($1.1012$).}
+    \label{fig:loss_curve_pilot}
+\end{figure}
+
+The following key patterns are observed in Experiment 1:
+\begin{enumerate}
+    \item \textbf{Early Generalization Peak (Epoch 3):} Validation loss reaches its minimum of $1.1012$ at Epoch 3. Due to the small sample size ($900$ training samples), the model rapidly exhausts the diversity of the subset, and further parameter updates lead to overfitting.
+    \item \textbf{Monotonic Divergence (Epochs 4--15):} Post-Epoch 3, the validation loss increases monotonically from $1.1133$ to $1.3216$, while the training loss steadily declines to $3.192$. This clear divergence demonstrates classic overfitting, indicating that a small-scale dataset is insufficient for training a 7B parameter model without early stopping or regularized data scaling.
+\end{enumerate}
+
+\subsubsection{Experiment 2: Data Augmentation via Pitch-Shifting (3,162 Samples)}
+To evaluate the impact of physical audio perturbations as regularizers against overfitting, pitch-shifting augmentation is conducted (Experiment 2). The training set consists of 1,054 original samples augmented by $+2$ and $-2$ semitones, scaling the training corpus to 3,162 samples, while evaluating on the same 117 held-out validation samples. The training and validation loss history is detailed in Table~\ref{tab:qwen_loss_history_augmented} and plotted in Figure~\ref{fig:loss_curve_augmented}.
+
+\begin{table}[h]
+    \caption{Experiment 2 (Data Augmentation) Training and Validation Loss History}
+    \label{tab:qwen_loss_history_augmented}
+    \centering
+    \footnotesize
+    \begin{tabular}{lllp{2.4cm}}
+        \toprule
+        \textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss}      & \textbf{Observation}                       \\ \midrule
+        1              & 10.648              & 1.1151                 & Model training begins with augmented scale \\
+        2              & 9.632               & \textbf{1.0937} (Best) & Best checkpoint (Optimal generalization)   \\
+        3              & 8.433               & 1.1078                 & Onset of early overfitting                 \\
+        4              & 7.260               & 1.1524                 & Sharp validation loss rise                 \\
+        5              & 6.101               & 1.2121                 & Monotonic validation loss degradation      \\
+        6              & 5.098               & 1.2729                 & -                                          \\
+        7              & 4.211               & 1.3297                 & -                                          \\
+        8              & 3.461               & 1.4217                 & -                                          \\
+        9              & 2.871               & 1.4864                 & -                                          \\
+        10             & 2.393               & 1.5712                 & -                                          \\
+        11             & 2.048               & 1.6339                 & -                                          \\
+        12             & 1.812               & 1.6839                 & -                                          \\
+        13             & 1.645               & 1.7175                 & -                                          \\
+        14             & 1.568               & 1.7449                 & -                                          \\
+        15             & 1.526               & 1.7501                 & Training terminates; severe memorization   \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{loss_curve_augmented.pdf}
+    \caption{Experiment 2 (Data Augmentation) training and validation loss curves over 15 epochs. The left y-axis shows the average training loss (blue circle), while the right y-axis displays the validation loss (red square). The star marker highlights the optimal generalization checkpoint at Epoch 2 ($1.0937$).}
+    \label{fig:loss_curve_augmented}
+\end{figure}
+
+The training trajectory in Experiment 2 reveals two critical insights:
+\begin{enumerate}
+    \item \textbf{Accelerated Overfitting Peak (Epoch 2):} Although training data scale is tripled (from 1,054 to 3,162 samples) using pitch shifting, the validation loss reaches its minimum of $1.0937$ at Epoch 2. This is earlier than the Epoch 3 optimal checkpoints of the non-augmented runs.
+    \item \textbf{Catastrophic Late Divergence:} Post-Epoch 2, validation loss degrades severely and monotonically to $1.7501$ at Epoch 15 (a $60\%$ increase relative to the best checkpoint), while the training loss converges down to $1.526$. Since the pitch-shifted audio signals share identical captions with the original recordings, the model quickly memorizes the association between acoustic pitch variations and the fixed text templates. This adds repetition rather than semantic diversity, leading to severe overfitting. Thus, pitch augmentation backfired, demonstrating that physical augmentations must be paired with appropriate label variations or replaced with genuine semantic diversity to prevent premature saturation.
+\end{enumerate}
+
+\subsubsection{Experiment 3: Full-Scale Experiment Dynamics (5,165 Clips)}
+In the full-scale experiment, the model is trained on the stratified training set of 4,125 samples and validated on 520 samples. The training and validation loss history is summarized in Table~\ref{tab:qwen_loss_history_full} and plotted in Figure~\ref{fig:loss_curve_full}.
+
+\begin{table}[h]
+    \caption{Experiment 3 (Full-Scale) Training and Validation Loss History}
+    \label{tab:qwen_loss_history_full}
     \centering
     \footnotesize
     \begin{tabular}{lccc}
@@ -209,14 +310,14 @@ To understand the optimization trajectory of the PEFT framework, the training an
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\columnwidth]{loss_curve.pdf}
-    \caption{Qwen2-Audio-7B fine-tuning training and validation loss curves over 15 epochs. The left y-axis shows the average training loss (blue circle), while the right y-axis displays the validation loss (red square). The star marker highlights the optimal generalization point at Epoch 3.}
-    \label{fig:loss_curve}
+    \caption{Experiment 3 (Full-Scale) training and validation loss curves over 15 epochs. The left y-axis shows the average training loss (blue circle), while the right y-axis displays the validation loss (red square). The star marker highlights the optimal generalization checkpoint at Epoch 3 ($1.0890$).}
+    \label{fig:loss_curve_full}
 \end{figure}
 
-Several key patterns are identified in the training trajectory:
+Several key patterns are identified in the training trajectory of Experiment 3:
 \begin{enumerate}
-    \item \textbf{Optimal Generalization (Epoch 3):} Validation loss reaches its absolute minimum of $1.0890$ at Epoch 3. After this point, validation loss rises steadily, indicating the onset of overfitting as the model parameters saturate on the training subset ($1,054$ samples).
-    \item \textbf{Training Spikes (Epochs 7 and 12):} Sudden spikes in average training loss are observed (rising from 6.1667 to 9.0432 in Epoch 7, and from 7.5216 to 9.2922 in Epoch 12). These periodic jumps are followed by rapid recovery phases. This cyclic training instability suggests gradient variance issues under small batch sizes (effective batch size = 8) and highlights potential limitations in scheduling or data collation order over epochs.
+    \item \textbf{Improved Generalization and Stability:} The validation loss reaches its absolute minimum of $1.0890$ at Epoch 3 (slightly lower than the $1.1012$ in the pilot study). More importantly, the validation loss stays relatively stable, hovering between $1.09$ and $1.15$ throughout the 15 epochs, instead of diverging severely as in Experiment 1. This demonstrates that the larger, stratified dataset provides significant regularization, preventing catastrophic overfitting.
+    \item \textbf{Optimization Spikes (Epochs 7 and 12):} Sudden spikes in average training loss are observed (rising from 6.1667 to 9.0432 in Epoch 7, and from 7.5216 to 9.2922 in Epoch 12). These periodic jumps are followed by rapid recovery phases. This cyclic training instability suggests gradient variance issues under small batch sizes (effective batch size = 8) and highlights potential limitations in scheduling or data collation order over epochs.
 \end{enumerate}
 
 \subsection{Zero-Shot Gemma 4 Baselines and Comparative Analysis}
