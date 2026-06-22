@@ -138,10 +138,10 @@ To evaluate the effectiveness of the proposed parameter-efficient fine-tuning (P
 \begin{enumerate}
     \item \textbf{Qwen2-Audio Baseline:} The frozen, off-the-shelf Qwen2-Audio-7B-Instruct model, representing the base performance before domain adaptation.
     \item \textbf{Gemma 4 Baselines:} Google's state-of-the-art Gemma 4 multimodal models. Two architectural variants are compared:
-    \begin{itemize}
-        \item \textbf{Gemma 4 12B (Encoder-Free):} A dense 11.95-billion parameter model that projects raw audio signals directly into the LLM embedding space, released on April 16, 2026~\cite{gemma4}. Its parameter scale (12B) is substantially larger than the 7-billion parameter Qwen2-Audio baseline, providing a cross-scale comparison.
-        \item \textbf{Gemma 4 E4B (Encoder-Based):} A variant featuring a dedicated audio encoder (USM-style) for extracting acoustic representations, released on June 2, 2026~\cite{gemma4}.
-    \end{itemize}
+          \begin{itemize}
+              \item \textbf{Gemma 4 12B (Encoder-Free):} A dense 11.95-billion parameter model that projects raw audio signals directly into the LLM embedding space, released on April 16, 2026~\cite{gemma4}. Its parameter scale (12B) is substantially larger than the 7-billion parameter Qwen2-Audio baseline, providing a cross-scale comparison.
+              \item \textbf{Gemma 4 E4B (Encoder-Based):} A variant featuring a dedicated audio encoder (USM-style) for extracting acoustic representations, released on June 2, 2026~\cite{gemma4}.
+          \end{itemize}
 \end{enumerate}
 Comparing our fine-tuned Qwen2-Audio-7B model against these extremely recent and larger zero-shot models helps evaluate the necessity of domain-specific adaptation (PEFT) versus relying on state-of-the-art general multimodal models of larger scales.
 
@@ -229,12 +229,12 @@ The quantitative results comparing our fine-tuned Qwen2-Audio PEFT model against
     \footnotesize
     \begin{tabular}{lcccc}
         \toprule
-        \textbf{Metric} & \textbf{Qwen Baseline} & \textbf{Qwen FT (Ours)} & \textbf{Gemma 12B} & \textbf{Gemma E4B} \\ \midrule
-        ROUGE-1         & $0.4826 \pm 0.1987$           & $\mathbf{0.5035 \pm 0.2080}$           & $0.1670 \pm 0.0494$              & $0.1681 \pm 0.0511$              \\
-        ROUGE-2         & $0.2437 \pm 0.2173$           & $\mathbf{0.2711 \pm 0.2355}$           & $0.0170 \pm 0.0144$              & $0.0162 \pm 0.0141$              \\
-        ROUGE-L         & $0.3882 \pm 0.2117$           & $\mathbf{0.4095 \pm 0.2228}$           & $0.1099 \pm 0.0267$              & $0.1086 \pm 0.0276$              \\
-        BLEU            & $0.1798 \pm 0.2023$           & $\mathbf{0.2044 \pm 0.2223}$           & $0.0005 \pm 0.0032$              & $0.0009 \pm 0.0041$              \\
-        METEOR          & $0.4001 \pm 0.2148$           & $\mathbf{0.4184 \pm 0.2297}$           & $0.1839 \pm 0.0346$              & $0.1974 \pm 0.0365$              \\
+        \textbf{Metric} & \textbf{Qwen Baseline} & \textbf{Qwen FT (Ours)}      & \textbf{Gemma 12B}  & \textbf{Gemma E4B}  \\ \midrule
+        ROUGE-1         & $0.4826 \pm 0.1987$    & $\mathbf{0.5035 \pm 0.2080}$ & $0.1670 \pm 0.0494$ & $0.1681 \pm 0.0511$ \\
+        ROUGE-2         & $0.2437 \pm 0.2173$    & $\mathbf{0.2711 \pm 0.2355}$ & $0.0170 \pm 0.0144$ & $0.0162 \pm 0.0141$ \\
+        ROUGE-L         & $0.3882 \pm 0.2117$    & $\mathbf{0.4095 \pm 0.2228}$ & $0.1099 \pm 0.0267$ & $0.1086 \pm 0.0276$ \\
+        BLEU            & $0.1798 \pm 0.2023$    & $\mathbf{0.2044 \pm 0.2223}$ & $0.0005 \pm 0.0032$ & $0.0009 \pm 0.0041$ \\
+        METEOR          & $0.4001 \pm 0.2148$    & $\mathbf{0.4184 \pm 0.2297}$ & $0.1839 \pm 0.0346$ & $0.1974 \pm 0.0365$ \\
         \bottomrule
     \end{tabular}
     \vspace{1ex}
@@ -259,6 +259,37 @@ This indicates that the native audio encoder injects a genuine, content-grounded
 \subsection{Direct Comparison: Fine-Tuned Model vs. Zero-Shot Gemma 4}
 A direct comparison between the fine-tuned Qwen2-Audio PEFT model (Table~\ref{tab:qwen_results}) and the zero-shot Gemma 4 models (Table~\ref{tab:gemma_zeroshot}) underscores the massive performance gap between domain-specific adaptation and general zero-shot inference. Although Gemma 4 E4B is a state-of-the-art model containing billions of parameters, its zero-shot performance is heavily constrained. Specifically, the fine-tuned Qwen2-Audio model achieves a mean BLEU score of $0.2044$ (with a sample standard deviation of $0.2223$), which is more than 220 times higher than Gemma 4 E4B's score of $0.0009 \pm 0.0041$. Similarly, ROUGE-1 improves from $0.1681 \pm 0.0511$ (Gemma 4 E4B) to a mean of $0.5035$ (with a sample standard deviation of $0.2080$) for our fine-tuned model, and METEOR more than doubles from $0.1974 \pm 0.0365$ to a mean of $0.4184$ (with a sample standard deviation of $0.2297$). This enormous difference demonstrates that even highly advanced foundational models struggle to align structurally and semantically with specialized tasks without parameter-efficient fine-tuning. This highlights that PEFT is a critical and cost-effective necessity for deploying reliable, domain-specific audio description systems.
 
+\subsection{Interpretability and Temporal-Semantic Alignment via Token Activation Maps (TAM)}
+\label{sec:tam_analysis}
+
+To investigate whether multimodal large language models successfully capture temporal-semantic alignment---meaning that when the model generates a specific instrument token (e.g., "piano" or "drum"), the corresponding internal attention weights or activations align with the actual timestamps where the instrument is present in the raw audio---Token Activation Maps (TAM)~\cite{li2025token} are implemented and analyzed.
+
+\subsubsection{Methodology and Proxy Validation on MusicCaps}
+Evaluating temporal alignment on standard music captioning datasets like MusicCaps presents a primary challenge: the absence of second-level alignment annotations (ground truth). The dataset only provides clip-level textual captions and aspect labels without indicating when specific instruments or structures occur.
+
+To circumvent this limitation and validate the reliability of TAM as an interpretability tool, several proxy evaluation strategies are developed:
+\begin{enumerate}
+    \item \textbf{Silence Padding Test:} Padded $10$-second silence segments are appended to both the beginning and the end of active audio clips. The resulting activation maps are analyzed to verify if the peak activation of generated tokens correctly shifts and concentrates within the central active audio region. Across $6$ out of $6$ randomly selected test cases, the peak activations correctly fall inside the active audio boundary, proving that TAM can distinguish between audio activity and silence.
+    \item \textbf{Dual-Clip Concatenation (A+B) Test:} Two audio clips featuring completely different instrumentations are spliced together to form a composite track (A+B). In an ideal alignment map, when the model generates a token describing the instrument in clip A, the activation map should peak in the first half of the sequence. However, because MusicCaps contains real-world recordings with dense multi-instrument mixing and residual background overlaps, the ground truth boundaries are highly polluted, leading to noisy and inconclusive results, which forced this approach to be discarded.
+    \item \textbf{Core Noun Extraction:} Textual aspect labels in MusicCaps are often complex noun phrases (e.g., "fast jazz drumming"). To ensure precise matching between generated tokens and the labels, a rule-based parser is designed to extract core nouns (e.g., "drumming") for token-activation alignment.
+    \item \textbf{Content vs. Function Word Ablation:} To verify if TAM possesses genuine semantic selectivity or merely acts as an audio energy detector, the activation maps of semantic content words (e.g., "guitar", "drum") are compared against grammatical function words (e.g., "the", "a"). The peakiness of the content word activations is measured to be $1.63$ times higher than that of the function words. This indicates a positive, albeit weak, semantic selectivity, demonstrating that TAM retains some degree of token-specific targeting.
+\end{enumerate}
+
+\subsubsection{Clean-Track Quantized Validation on BabySlakh}
+To perform a rigorous, fully quantized evaluation with clean, unpolluted ground truth, the BabySlakh dataset is utilized. BabySlakh contains $20$ MIDI-synthesized multi-track pieces, providing separate clean audio waveforms for each individual instrument track (e.g., piano, drums, bass). This enables exact mapping of when each instrument is active.
+
+A $15$-second segment (from $58$ to $73$ seconds) from Track00009 containing $7$ simultaneously active instruments is selected as the input. The generated caption tokens are aligned with the individual instrument tracks. A quantitative metric, \textit{Selectivity}, is defined as the correlation between the token's activation map and its corresponding correct instrument track minus its correlation with the incorrect instrument tracks. Three primary TAM strategies are evaluated:
+\begin{enumerate}
+    \item \textbf{LM-Head TAM:} This method maps the hidden states of intermediate audio frames directly to the vocabulary logit space using the model's causal language modeling head (\texttt{lm\_head}), estimating which tokens the model is pre-disposed to output at each audio frame. The experimental results yield a low mean selectivity of only $0.087$, with the best-performing token ("drum") reaching only $0.18$. Crucially, the activation map for the "drum" token displays a higher correlation with the bass track waveform ($0.327$) than with the drum track waveform ($0.262$), indicating a failure to distinguish between overlapping instrument tracks.
+    \item \textbf{Attention TAM:} This method extracts the self-attention weights of the causal decoder layers, measuring how generated tokens attend back to the acoustic projection tokens. Across all $33$ generated tokens in the sequence, the attention weights collapse onto the exact same temporal position: position 9 ($0.36$ seconds), which corresponds to the first non-silent frame immediately following the silence padding. Consequently, the selectivity is $0.0$, indicating that self-attention layers treat the audio sequence as a unified semantic block rather than performing fine-grained temporal tracking.
+    \item \textbf{Gradient TAM (Input $\times$ Gradient):} This method computes the gradient of the generated token logit with respect to the input audio representation, multiplying the gradient by the input values. The calculated mean selectivity is $0.059$, performing worse than the LM-Head method. This performance degradation indicates that when backpropagating through a deep $32$-layer Transformer decoder, the gradient signal is heavily degraded by architectural noise. Furthermore, this method requires a separate backpropagation pass for every generated token, making it computationally prohibitive for large models ($7$B parameters) in real-time inference.
+\end{enumerate}
+
+\subsubsection{Architectural Diagnosis of Decoder-Only Multimodal LLMs}
+The consistent failure of all three TAM methods to establish fine-grained temporal-semantic alignment reveals a fundamental limitation of modern audio-language architectures. Source code analysis of Qwen-Audio and Qwen2-Audio models reveals a critical design detail: Qwen2-Audio is a decoder-only architecture where the output of the frozen audio tower is projected into the causal LLM decoder as a sequence of regular input tokens. This "audio-as-tokens" design lacks a dedicated cross-attention mechanism between the language decoder and the acoustic encoder.
+
+In multimodal vision-language models (e.g., those utilizing CLIP), cross-attention layers preserve direct, localized correspondence between textual tokens and visual segments. In contrast, in a decoder-only architecture, the self-attention layers blend the representations of all input tokens (system prompts, user instructions, and audio tokens) globally. Once the audio frames are mixed with prompt prefixes, the exact temporal correspondence is lost. An investigation of the first-generation Qwen-Audio source code (\texttt{modeling\_qwen.py}) reveals that while the parameter \texttt{encoder\_hidden\_states} is defined in \texttt{QWenAttention.forward()}, it is completely unused throughout the attention computation. Other popular open-weights audio LLMs, such as SALMONN, share this identical decoder-only + audio-as-tokens paradigm. This diagnosis confirms that the lack of temporal-semantic alignment in music captioning is not a failure of parameter fine-tuning, but rather a fundamental, structural constraint of decoder-only self-attention architectures.
+
 \subsection{Discussion of Goals, Assumptions, and Implications}
 
 The core goals, assumptions, and theoretical/practical implications of the results are addressed.
@@ -282,6 +313,7 @@ Several key technical difficulties were encountered during this project:
     \item \textbf{Hardware Constraints and OOMs:} Fine-tuning and evaluating 7B parameter models on a single GPU frequently triggered out-of-memory errors. This was resolved by using custom garbage collection callbacks and prediction chunking.
     \item \textbf{Spike-like Training Instability:} Training Qwen2-Audio with low-rank adapters showed periodic loss spikes, indicating optimization noise under small training subsets.
     \item \textbf{Zero-Shot Style Mismatch:} Off-the-shelf instruction-tuned models exhibit a strong formatting bias (lists, headers, verbosity) that conflicts with standard sequence-to-sequence evaluation references, requiring custom metric analyses.
+    \item \textbf{Temporal Alignment and Interpretability Constraints:} Resolving fine-grained instrument alignment via Token Activation Maps (TAM) was heavily constrained across multiple methods (LM-Head, Attention, Gradient). The lack of cross-attention layers in decoder-only audio LLMs represents a structural barrier for mapping textual outputs back to specific timestamps in raw audio waveforms.
 \end{enumerate}
 
 \subsection{Future Directions}
@@ -290,6 +322,7 @@ For future work, the following directions are proposed:
     \item \textbf{Style-Corrected Prompting:} Exploring instruction templates that constrain zero-shot models to concise prose outputs.
     \item \textbf{Semantic Caption Paraphrasing:} Utilizing LLMs to rewrite reference captions to increase training data diversity, preventing early overfitting.
     \item \textbf{PEFT Adaptation on Gemma 4 E4B:} Applying LoRA tuning directly to the native-audio E4B architecture to combine its structural stability with domain-specific accuracy.
+    \item \textbf{Cross-Attention Architectural Redesign:} Introducing dedicated cross-attention layers between the audio encoder and language decoder to preserve localized, fine-grained temporal-semantic alignment, overcoming the alignment limits of decoder-only LLMs.
 \end{enumerate}
 
 \bibliographystyle{IEEEtran}
