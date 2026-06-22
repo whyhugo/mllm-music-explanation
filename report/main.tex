@@ -365,7 +365,14 @@ A direct comparison between the fine-tuned Qwen2-Audio PEFT model (Table~\ref{ta
 \subsection{Interpretability and Temporal-Semantic Alignment via Token Activation Maps (TAM)}
 \label{sec:tam_analysis}
 
-To investigate whether multimodal large language models successfully capture temporal-semantic alignment---meaning that when the model generates a specific instrument token (e.g., "piano" or "drum"), the corresponding internal attention weights or activations align with the actual timestamps where the instrument is present in the raw audio---Token Activation Maps (TAM)~\cite{li2025token} are implemented and analyzed.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{TAM_result_cropped.png}
+    \caption{Visualized Token Activation Map (TAM) on a single music clip. The top panel shows the original audio waveform. The subsequent heatmaps display the causal language model projection activation density of representative generated tokens: a grammatical function word (\texttt{'The'}) showing diffuse, scattered activation, vs. content-bearing tokens (\texttt{'live'}, \texttt{'strings'}, \texttt{'melody'}) showing more localized activation patterns.}
+    \label{fig:tam_visualization}
+\end{figure}
+
+To investigate whether multimodal large language models successfully capture temporal-semantic alignment---meaning that when the model generates a specific instrument token (e.g., "piano" or "drum"), the corresponding internal attention weights or activations align with the actual timestamps where the instrument is present in the raw audio---Token Activation Maps (TAM)~\cite{li2025token} are implemented and analyzed. A representative visualization of the activation densities for a single music clip is presented in Figure~\ref{fig:tam_visualization}.
 
 \subsubsection{Methodology and Proxy Validation on MusicCaps}
 Evaluating temporal alignment on standard music captioning datasets like MusicCaps presents a primary challenge: the absence of second-level alignment annotations (ground truth). The dataset only provides clip-level textual captions and aspect labels without indicating when specific instruments or structures occur.
