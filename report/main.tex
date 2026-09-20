@@ -8,8 +8,15 @@
 \usepackage{url}
 \usepackage{fontspec} 
 \usepackage{xeCJK}
+\usepackage{booktabs}
+\usepackage{flushend}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows,positioning,calc,fit}
+\setCJKmainfont{TW-MOE-Std-Kai}
+\setmainfont{Times New Roman}
 
-% 定義一個正規的 Problem 環境來取代 blockquote
+
+% Define formal environments
 \newtheorem{problem}{Problem Statement}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
@@ -25,22 +32,37 @@
 }
 
 \maketitle
+\thispagestyle{plain}
+\pagestyle{plain}
 
-\section{Introduction}
-\label{sec:introduction}
-\textbf{GOAL:}
-Improve structural alignment and semantic richness over the zero-shot model.
 
+\noindent\textbf{Goal of This Work:} The goal of this work is to improve both structural alignment (mapping musical progression to text layout) and semantic richness (incorporating vocabulary describing genres, instruments, tempos, and moods) in music captioning over the zero-shot baseline.
+
+\section{Motivation, Goals, and Detailed Problem Statement}
+\label{sec:motivation}
 
 The rapid advancement of Multimodal Large Language Models (MLLMs) has dramatically transformed cross-modal understanding, enabling deep integration between auditory signals and textual reasoning. Within this landscape, \textit{music captioning}---the task of generating coherent, rich, and contextually accurate natural language descriptions from raw music audio---serves as a critical frontier in computational musicology and machine listening.
 
 \subsection{Application Domain}
 Automating the translation of musical acoustics into human prose holds immense value across several real-world digital ecosystems. In music streaming platforms and large-scale digital libraries, automatic captioning facilitates precise content discovery, automated playlist generation, and semantic search over massive, unlabeled audio repositories. Furthermore, it plays a vital role in accessibility, providing vivid contextual descriptions for deaf and hard-of-hearing individuals. Lastly, fine-grained music captions serve as foundational semantic prompts to guide contemporary text-to-music generative frameworks \cite{musicgen, musiccaps}, which rely heavily on highly descriptive text to synthesize target acoustic structures.
 
+\subsection{Formal Problem Statement}
+Let $\mathbf{x} \in \mathbb{R}^T$ represent a raw audio waveform of duration $D = T / f_s$ seconds (where $f_s$ is the sampling rate, set to 16 kHz). The goal of music captioning is to generate a sequence of natural language tokens $\mathbf{y} = (y_1, y_2, \dots, y_L)$ that describes $\mathbf{x}$. Formally, this is modeled as maximizing the conditional probability:
+\begin{equation}
+    P(\mathbf{y} \mid \mathbf{x}) = \prod_{i=1}^L P(y_i \mid y_{<i}, \mathbf{x}; \theta)
+\end{equation}
+where $\theta$ represents the parameters of the model.
+
+In a parameter-efficient fine-tuning (PEFT) framework, a tiny fraction of parameters $\theta_{\text{trainable}} \subset \theta$ is optimized to minimize the auto-regressive cross-entropy loss over a dataset $\mathcal{D}$:
+\begin{equation}
+    \mathcal{L}(\theta) = -\sum_{(\mathbf{x}, \mathbf{y}) \in \mathcal{D}} \sum_{i=1}^L \log P(y_i \mid y_{<i}, \mathbf{x}; \theta_{\text{trainable}})
+\end{equation}
+while keeping the remaining base model parameters $\theta_{\text{frozen}}$ fixed.
+
 \section{Related Work}
 \label{sec:related_work}
 
-The evolution of automatic music description has shifted from simplistic multi-label tag classification to sophisticated text generation. To contextualize our implementation, we analyze three distinct architectural paradigms in recent literature.
+The evolution of automatic music description has shifted from simplistic multi-label tag classification to sophisticated text generation. To contextualize this implementation, three distinct architectural paradigms in recent literature are analyzed.
 
 \subsection{Foundational Deep Encoder-Decoder Frameworks}
 The conceptual foundation of treating music description as a fluid sequence-to-sequence task was pioneered by Manco et al. in \textit{MusCaps} \cite{manco2021muscaps}. The MusCaps architecture introduces a joint multimodal framework combining a convolutional network (CNN) front-end for feature extraction with a Recurrent Neural Network (RNN/LSTM) text decoder enhanced by temporal attention. A key insight from MusCaps was the strict necessity of target-domain audio pre-training to obtain acoustic representations that effectively summarize musical features before textual alignment. While successful in establishing the feasibility of natural language music descriptions, its reliance on classical LSTM structures limited its capability to capture long-range structural dependencies and generate high-level semantic prose.
@@ -51,6 +73,446 @@ To inject explicit technical musical dimensions---often termed ``hard features''
 \subsection{Direct Metadata Imputation and Two-Stage Synthesis}
 Addressing the sparse availability of paired audio-caption datasets, Bukey et al. presented a unique alternative via metadata-driven language synthesis in \textit{Rethinking Music Captioning} \cite{bukey2026rethinking}. Instead of configuring an end-to-end network to map audio signals directly to fluid textual paragraphs, they instruction-tune a multimodal model (built on Gemma3-1B-it \cite{gemma3}) to act as a structured metadata predictor given an audio input alongside optional partial metadata tokens. This design enables the network to infer clean, structured JSON schemas detailing categorical fields such as genre, mood, tempo, and key, while inherently supporting metadata imputation tasks for incomplete databases. At inference time, this generated JSON snippet is decoupled and handed over to an offline text-only LLM, which uses custom post-hoc style prompts to re-write the dry metadata fields into rich, expressive prose. While this modular strategy yields fast training convergence and permits post-training style alterations, it decouples text synthesis from direct acoustic feedback, risking the loss of fine-grained emotional and structural dynamics that only unified models can naturally capture.
 
+\subsection{Interpretability and Token Activation Mapping in Multimodal LLMs}
+\label{sec:interpretability_tam_background}
+Multimodal Large Language Models (MLLMs) have demonstrated impressive capabilities across various vision-language tasks, yet the interpretability of their decision-making process remains a major challenge. Unlike traditional visual models (e.g., CNNs and ViTs) that output a single prediction, MLLMs employ an auto-regressive mechanism to generate textual tokens sequentially. During generation, the target text token inevitably exhibits causal dependency and feature interference with prior context tokens (including system prompts, user instructions, and previously generated answers). This ``context interference'' introduces substantial redundant activation noise when mapping textual tokens back to the input multimodal representation space. 
+
+To overcome this challenge, Token Activation Maps (TAM)~\cite{li2025token} were proposed. The core motivation of TAM is to leverage estimated causal inference to filter and eliminate the interference from context tokens, thereby precisely revealing the grounded multimodal cues in the input feature space that are responsible for the generation of specific textual tokens.
+
+\paragraph{Mathematical Definition}
+To formally describe the mechanism of TAM, we first define the input and output representations of the MLLM. Given a multimodal input, we extract the multimodal feature sequence from the final decoder layer after passing it through the visual encoder and projection layers. Let the visual feature sequence be $\mathbf{F}^v \in \mathbb{R}^{n_v \times c}$, the prompt feature sequence be $\mathbf{F}^p \in \mathbb{R}^{n_p \times c}$, and the generated answer feature sequence be $\mathbf{F}^a \in \mathbb{R}^{n_a \times c}$, where $n_v$, $n_p$, and $n_a$ denote the number of tokens in their respective sequences, and $c$ is the hidden dimension.
+
+Subsequently, the MLLM decodes specific text tokens using a token classifier (typically the language modeling head, \texttt{lm\_head}). Let the generated answer token sequence be $t^a = \{t^a_1, \dots, t^a_{n_a}\}$ and the prompt token sequence be $t^p = \{t^p_1, \dots, t^p_{n_p}\}$. We denote the classifier weight vector corresponding to the $i$-th target answer token $t^a_i$ as $\mathbf{w}_{t^a_i} \in \mathbb{R}^{c \times 1}$.
+
+\paragraph{Variants of TAM Extraction}
+Before applying causal interference elimination, a raw activation map $\mathbf{A}^a_i \in \mathbb{R}^{n_v \times 1}$ for the target token $t^a_i$ must be obtained. Depending on which internal representations are extracted from the model, the initial activation map can be computed via three distinct variants~\cite{li2025token}:
+
+\begin{itemize}
+    \item \textbf{LM-Head TAM (Logit-based Projection)}: 
+    This is the default and most computationally efficient method. It directly utilizes the classifier projection weight $\mathbf{w}_{t^a_i}$ to project the visual feature sequence $\mathbf{F}^v$, calculating the logit contribution of each visual token to the target word prediction. The formulation is given by:
+    \begin{equation}
+        \mathbf{A}^a_i = \lfloor \mathbf{F}^v \mathbf{w}_{t^a_i} \rfloor_+
+    \end{equation}
+    where $\lfloor \cdot \rfloor_+$ denotes the rectified linear unit (ReLU) operation to retain only positive activations. This projection requires no backpropagation, making it computationally cheap while directly reflecting the classification head's decision logic.
+
+    \item \textbf{Gradient TAM}: 
+    This variant constructs a saliency map by computing the gradient of the target token's output logit with respect to the input visual features (similar to the Input $\times$ Gradient approach in Grad-CAM). However, as MLLMs typically do not contain pooling layers, the output logit is simply the inner product of the feature vector and the classifier weights. Consequently, the gradient with respect to the input features is mathematically proportional to the projection weight $\mathbf{w}_{t^a_i}$. This renders Gradient TAM mathematically equivalent to LM-Head TAM, while incurring substantial backpropagation computational overhead.
+
+    \item \textbf{Attention TAM}: 
+    This variant leverages the self-attention weights inside the Transformer decoder to measure the correspondence between text and visual features. It extracts the text-to-vision attention matrix (i.e., the attention query weights of the target token $t^a_i$ over visual keys) from the final or intermediate decoder layers to serve as $\mathbf{A}^a_i$. Although intuitive, this method requires direct access to attention matrices, which is often hindered when using hardware-accelerated kernels (such as FlashAttention) that do not explicitly materialize the full attention weights.
+\end{itemize}
+
+Once the raw activation map $\mathbf{A}^a_i$ is extracted, TAM filters out context interference by estimating an interference map $\mathcal{E}(\mathbf{A}_{:n_p+i-1})$. Using least squares estimation to solve for the optimal scaling factor $s$, and applying a rank Gaussian filter $\mathcal{D}(\cdot)$, the final denoised, interference-free activation map $\bar{\mathbf{A}}^a_i$ is computed as:
+\begin{equation}
+    \bar{\mathbf{A}}^a_i = \lfloor \mathcal{D}(\mathbf{A}^a_i - s\mathcal{E}(\mathbf{A}_{:n_p+i-1})) \rfloor_+
+\end{equation}
+
+In this work, we extend this spatial/visual TAM framework to the temporal audio domain, formulating \textit{Audio-TAM} to analyze the temporal-semantic alignment in decoder-only audio LLMs.
+
+\section{Simulation (Software) Used and Model Architecture}
+\label{sec:simulation_software}
+
+Experiments are implemented using standard deep learning libraries and frameworks. The software environment is built on Python 3.10 using the PyTorch framework, Hugging Face \texttt{transformers}, and the Hugging Face \texttt{peft} library.
+
+A unified, end-to-end framework is utilized for music captioning based on the Qwen2-Audio-7B-Instruct multimodal language model architecture \cite{qwen2audio}. The model architecture and training configuration focus on cross-modal representation alignment and task-targeted sequence learning under tight hardware constraints. The overall PEFT architecture and the parameter states (frozen vs. trainable) are illustrated in Figure~\ref{fig:model_architecture}.
+
+\begin{figure*}[t]
+    \centering
+    \begin{tikzpicture}[
+        node distance=0.8cm and 0.8cm,
+        box/.style={draw, rectangle, rounded corners=3pt, minimum width=2.4cm, minimum height=1.0cm, align=center, font=\footnotesize},
+        frozen/.style={box, fill=gray!10, draw=gray!80, text=gray!80},
+        trainable/.style={box, fill=teal!20, draw=teal!80, text=teal!90, thick},
+        data/.style={draw, ellipse, fill=white, minimum width=1.5cm, minimum height=0.6cm, align=center, font=\scriptsize},
+        arrow/.style={-stealth, thick}
+    ]
+        % Nodes in a horizontal line
+        \node (audio) [data] {Raw Audio\\$\mathbf{x}$};
+        \node (encoder) [frozen, right=of audio] {Audio Encoder\\(Frozen Whisper)};
+        \node (projector) [trainable, right=of encoder] {Multimodal Projector\\(Unfrozen Bridge)};
+        
+        \node (concat) [draw, circle, right=of projector, fill=gray!5] {+};
+        
+        \node (prompt) [data, above=of concat] {Text Prompt\\(Instruction)};
+        
+        \node (llm) [frozen, right=of concat] {Causal LLM Decoder\\(Frozen Qwen2-7B)};
+        \node (lora) [trainable, above=of llm] {LoRA Adapters\\(Trainable $q,k,v,o$)};
+        
+        \node (caption) [data, right=of llm] {Output Caption\\$\mathbf{y}$};
+
+        % Arrows
+        \draw [arrow] (audio) -- (encoder);
+        \draw [arrow] (encoder) -- (projector);
+        \draw [arrow] (projector) -- (concat);
+        \draw [arrow] (prompt) -- (concat);
+        \draw [arrow] (concat) -- (llm);
+        \draw [arrow] (llm) -- (caption);
+        \draw [arrow] (lora) -- (llm);
+
+        % Label backgrounds or groupings
+        \node[draw, dashed, gray, inner sep=0.3cm, fit=(llm) (lora), label=below:\footnotesize Fine-tuned LLM Block] {};
+        
+    \end{tikzpicture}
+    \caption{Architecture and fine-tuning scheme of our parameter-efficient fine-tuning (PEFT) framework. Light gray boxes represent frozen pre-trained components (Audio Encoder and Causal LLM Decoder). Teal colored boxes represent trainable parameters optimized during fine-tuning (the Multimodal Projector bridge and the Low-Rank Adaptation (LoRA) modules injected into the attention layers).}
+    \label{fig:model_architecture}
+\end{figure*}
+
+\subsection{Foundation Multimodal Architecture}
+The base model, Qwen2-Audio-7B-Instruct, consists of three core components:
+\begin{enumerate}
+    \item \textbf{Audio Encoder (Audio Tower):} A Whisper-like Transformer encoder that processes the raw audio waveform $\mathbf{x}$. The waveform is downsampled and transformed into a sequence of acoustic representation vectors. This component is frozen throughout training to preserve generalized audio feature extraction.
+    \item \textbf{Multimodal Projector:} A linear projection bridge that maps the acoustic representation vectors from the audio encoder space into the input token embedding space of the language decoder.
+    \item \textbf{Language Decoder:} A Qwen2-7B causal language decoder that auto-regressively predicts the textual tokens.
+\end{enumerate}
+
+\subsection{Parameter-Efficient Fine-Tuning (PEFT)}
+To adapt Qwen2-Audio to the music captioning domain without updating all 7.77 billion parameters, Low-Rank Adaptation (LoRA) is implemented \cite{LoRA}. Low-rank decomposition matrices $A$ and $B$ are injected into the attention weight projections of the language model:
+\begin{equation}
+    W = W_0 + \Delta W = W_0 + \frac{\alpha}{r} B A
+\end{equation}
+where $W_0$ is the pre-trained weight matrix, $r=16$ is the decomposition rank, and $\alpha=32$ is the scaling factor. LoRA is applied to the query, key, value, and output projections ($q\_proj, k\_proj, v\_proj, o\_proj$) in all self-attention layers.
+
+Furthermore, to align the representations of the pre-trained audio tower with the adapted language decoder, the multi-modal projector is unfrozen. This hybrid configuration results in $16.78$ million trainable parameters, representing only $0.2159\%$ of the total model parameters, making training highly resource-efficient.
+
+\subsection{Loss Masking and Formatting Strategy}
+The model input is structured using ChatML format, inserting audio tokens inside the user block:
+\begin{verbatim}
+<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+Audio: <audio_tokens>
+Please describe this music in detail 
+and list its aspects.<|im_end|>
+<|im_start|>assistant
+[Ground Truth Caption]<|im_end|>
+\end{verbatim}
+To focus the optimization process strictly on generation quality, label loss masking is applied. Cross-entropy loss is computed only on tokens within the assistant's response block (represented by the ground truth caption). All other tokens (system prompts, user prompts, and audio projection tokens) are assigned a target label of $-100$ in the loss computation, preventing the model from distorting its language model priors on prompt templates.
+
+\section{Design of Experiments}
+\label{sec:experimental_design}
+
+\subsection{Dataset and Canonical Splits}
+The proposed methods are evaluated on the Google MusicCaps dataset \cite{musiccaps}, which contains high-quality natural language captions written by musicians. Since the audio files are sourced from YouTube, several videos have been deleted since the dataset's publication. In this work, three stages of experiments are designed to evaluate the scaling and regularization characteristics of the model:
+\begin{enumerate}
+    \item \textbf{Experiment 1 (Pilot Study):} A small-scale pilot experiment is conducted on a subset of $1,100$ successfully downloaded clips. This dataset is partitioned into $900$ samples for training, $100$ samples for validation, and $100$ samples for test evaluation. This study serves to validate hyperparameters and verify convergence properties.
+    \item \textbf{Experiment 2 (Data Augmentation):} Pitch-shifting augmentation is applied to a subset of $1,054$ training samples (shifted by $+2$ and $-2$ semitones), tripling the training set to $3,162$ samples to investigate its regularizing effects on a low-resource regime, validated on $117$ held-out samples.
+    \item \textbf{Experiment 3 (Full-Scale Experiment):} A full-scale experiment is conducted on the complete set of $5,165$ valid downloaded clips. This processed dataset is partitioned using an aspect-based stratified split (\texttt{split.py}) to balance the top 15 most frequent musical aspects across subsets. The dataset is split with an $80/10/10\%$ ratio into:
+          \begin{itemize}
+              \item \textbf{Training Set:} $4,125$ samples ($80\%$) for model training.
+              \item \textbf{Validation Set:} $520$ samples ($10\%$) for monitoring training dynamics and checkpoint selection.
+              \item \textbf{Held-Out Test Set:} $520$ samples ($10\%$) for final out-of-sample evaluation.
+          \end{itemize}
+\end{enumerate}
+
+\subsection{Hyperparameter and Training Details}
+All training is conducted using PyTorch and Hugging Face's \texttt{Trainer} on a single NVIDIA GeForce RTX 3090 GPU (24GB VRAM). Specifically, Experiment 1 is conducted on a local workstation, whereas Experiment 3 is performed on the RunPod cloud platform. The total training runtimes for Experiment 1 and Experiment 3 are as follows:
+\begin{itemize}
+    \item \textbf{Experiment 1 (Pilot Study):} The total training time is approximately 2.5 hours.
+    \item \textbf{Experiment 3 (Full-Scale Experiment):} The total training time is approximately 15 hours.
+\end{itemize}
+The optimization hyperparameters are kept identical across all three experiments:
+\begin{itemize}
+    \item \textbf{Optimization:} AdamW optimizer with a cosine learning rate scheduler.
+    \item \textbf{Batch Size:} A per-device batch size of 1 with 8 gradient accumulation steps, yielding an effective batch size of 8.
+    \item \textbf{Learning Rate (LR):} Scaled from $2\times 10^{-5}$ down to $1\times 10^{-5}$ to minimize gradient instability.
+    \item \textbf{Regularization:} Max gradient norm constrained to $0.5$. Warmup steps set to $10\%$ of total training.
+    \item \textbf{Hardware Optimization:} Mixed-precision (fp16) training. To mitigate GPU out-of-memory (OOM) errors on 24GB VRAM hardware, PyTorch's \texttt{expandable\_segments} memory allocator is activated alongside intermediate cache clearing callbacks.
+\end{itemize}
+
+\subsection{Data Augmentation via Pitch-Shifting}
+To investigate regularizing the model against overfitting, audio pitch-shifting augmentation is applied. For each training sample, two augmented variants shifted by $+2$ and $-2$ semitones are created, while keeping the ground-truth text caption unchanged. This triples the training set scale from $1,054$ to $3,162$ samples.
+
+\subsection{Baseline Models and Comparison Setup}
+To evaluate the effectiveness of the proposed parameter-efficient fine-tuning (PEFT) approach, the fine-tuned model is compared against two sets of zero-shot baselines:
+\begin{enumerate}
+    \item \textbf{Qwen2-Audio Baseline:} The frozen, off-the-shelf Qwen2-Audio-7B-Instruct model, representing the base performance before domain adaptation.
+    \item \textbf{Gemma 4 Baselines:} Google's state-of-the-art Gemma 4 multimodal models. Two architectural variants are compared:
+          \begin{itemize}
+              \item \textbf{Gemma 4 12B (Encoder-Free):} A dense 11.95-billion parameter model that projects raw audio signals directly into the LLM embedding space, released on April 16, 2026~\cite{gemma4}. Its parameter scale (12B) is substantially larger than the 7-billion parameter Qwen2-Audio baseline, providing a cross-scale comparison.
+              \item \textbf{Gemma 4 E4B (Encoder-Based):} A variant featuring a dedicated audio encoder (USM-style) for extracting acoustic representations, released on June 2, 2026~\cite{gemma4}.
+          \end{itemize}
+\end{enumerate}
+Comparing our fine-tuned Qwen2-Audio-7B model against these extremely recent and larger zero-shot models helps evaluate the necessity of domain-specific adaptation (PEFT) versus relying on state-of-the-art general multimodal models of larger scales.
+
+\section{Presentation of Results and Discussion}
+\label{sec:results}
+
+The performance of the models is evaluated on the canonical held-out MusicCaps test split ($n=520$ clips). Standard machine translation metrics are reported: BLEU, METEOR, ROUGE-1, ROUGE-2, and ROUGE-L.
+
+\subsection{Quantitative Evaluation on Qwen2-Audio PEFT}
+Table~\ref{tab:qwen_results} summarizes the primary quantitative comparison between the zero-shot Qwen2-Audio-7B-Instruct baseline and the parameter-efficient fine-tuned (PEFT) model. Traditionally, corpus-level metrics like BLEU and ROUGE do not naturally yield sample-level variance as they are computed globally over the entire evaluation set. Furthermore, due to the non-linear properties of these metrics (e.g., geometric averaging and brevity penalties in BLEU), standard parametric significance tests such as Student's t-test are not directly applicable. To establish rigorous confidence intervals and assess statistical significance, we employ non-parametric bootstrap resampling, following established practices in machine translation evaluation \cite{koehn2004statistical}. In this setup, $B = 1,000$ bootstrap replicates are generated by sampling $N = 520$ test clips with replacement from the original test set. The target evaluation metrics are computed for each replicate, yielding an empirical distribution of the scores. This empirical distribution is then used to compute the bootstrap mean and the Standard Error (SE), which represents the standard deviation of the bootstrap estimator. To capture the performance volatility over different musical genres and structures, the metrics are reported in Table~\ref{tab:qwen_results} as Mean $\pm$ Sample Standard Deviation (SD) of the individual test clips. Furthermore, to verify that the observed performance improvements are statistically robust and not artifacts of random test split selection, the Standard Error (SE) of the mean, estimated from the empirical bootstrap distribution, is reported in a separate column to facilitate significance testing.
+
+\begin{table*}[t]
+    \centering
+    \footnotesize
+    \caption{Qwen2-Audio-7B Music Captioning Results on Held-Out Test Split ($n=520$)}
+    \label{tab:qwen_results}
+    \begin{tabular}{lccccc}
+        \toprule
+        \textbf{Metric} & \textbf{Baseline (M$\pm$SD)} & \textbf{Base SE} & \textbf{Fine-Tuned (M$\pm$SD)} & \textbf{FT SE} & \textbf{Improvement} \\ \midrule
+        ROUGE-1         & $0.4826 \pm 0.1987$          & 0.0088           & $0.5035 \pm 0.2080$            & 0.0093         & +4.33\%              \\
+        ROUGE-2         & $0.2437 \pm 0.2173$          & 0.0096           & $0.2711 \pm 0.2355$            & 0.0105         & +11.24\%             \\
+        ROUGE-L         & $0.3882 \pm 0.2117$          & 0.0093           & $0.4095 \pm 0.2228$            & 0.0099         & +5.50\%              \\
+        BLEU            & $0.1798 \pm 0.2023$          & 0.0089           & $0.2044 \pm 0.2223$            & 0.0098         & +13.70\%             \\
+        METEOR          & $0.4001 \pm 0.2148$          & 0.0095           & $0.4184 \pm 0.2297$            & 0.0102         & +4.58\%              \\
+        \bottomrule
+    \end{tabular}
+    \vspace{1ex}
+    \begin{flushleft}
+        \scriptsize Note: Values are reported as Mean $\pm$ Sample Standard Deviation (SD) representing individual clip variation. The Standard Error (SE) of the mean is estimated using non-parametric bootstrap resampling with 1,000 rounds to assess statistical significance.
+    \end{flushleft}
+\end{table*}
+
+The PEFT-LoRA configuration achieves solid, statistically significant improvements across all five metrics. Specifically, the model yields a \textbf{+13.70\% relative boost in BLEU} (0.1798 to 0.2044) and a \textbf{+11.24\% relative boost in ROUGE-2} (0.2437 to 0.2711). These results demonstrate that the model successfully learns to adapt its generated language output to describe musical features more aligned with musician-curated ground truth captions. While these improvements are more modest than the inflated in-sample scores observed in early experiments, they represent a robust, generalizeable capability on true held-out test data.
+
+\subsection{Qwen2-Audio Training Dynamics and Loss Analysis}
+To understand the optimization trajectory of the PEFT framework and evaluate its scaling behavior, the training and validation loss dynamics are analyzed across three stages of experiments: a small-scale pilot study (Experiment 1), a data augmentation study (Experiment 2), and a full-scale training run (Experiment 3).
+
+\subsubsection{Experiment 1: Pilot Study Dynamics (900:100:100 Subset)}
+In the pilot study, the model is trained on a subset of 900 samples and validated on 100 samples. The training and validation loss history over 15 epochs is documented in Table~\ref{tab:qwen_loss_history_pilot} and illustrated in Figure~\ref{fig:loss_curve_pilot}.
+
+\begin{table}[h]
+    \caption{Experiment 1 (Pilot Study) Training and Validation Loss History}
+    \label{tab:qwen_loss_history_pilot}
+    \centering
+    \footnotesize
+    \begin{tabular}{lllp{2.4cm}}
+        \toprule
+        \textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss}      & \textbf{Observation}                      \\ \midrule
+        1              & 8.760               & 1.1392                 & Model begins adapting to musical features \\
+        2              & 7.602               & 1.1091                 & Validation loss drops rapidly             \\
+        3              & 8.132               & \textbf{1.1012} (Best) & Best checkpoint (Optimal generalization)  \\
+        4              & 6.305               & 1.1133                 & Onset of slight overfitting               \\
+        5              & 6.166               & 1.1305                 & Train loss decreases, Val loss increases  \\
+        6              & 5.113               & 1.1518                 & Continued training divergence             \\
+        7              & 5.107               & 1.1771                 & -                                         \\
+        8              & 4.669               & 1.2026                 & -                                         \\
+        9              & 3.728               & 1.2370                 & -                                         \\
+        10             & 4.053               & 1.2613                 & -                                         \\
+        11             & 3.082               & 1.2896                 & -                                         \\
+        12             & 3.550               & 1.3065                 & -                                         \\
+        13             & 3.864               & 1.3156                 & -                                         \\
+        14             & 3.790               & 1.3209                 & -                                         \\
+        15             & 3.192               & 1.3216                 & Training terminates; severe overfitting   \\
+        \bottomrule
+    \end{tabular}
+    \vspace{1ex}
+    \begin{flushleft}
+        \scriptsize Note: The absolute value of Train Loss is relatively large due to differences in sampling and calculation intervals; the primary focus is its continuous downward trend. Validation Loss is the true metric for measuring the model's generalization capabilities.
+    \end{flushleft}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{loss_curve_pilot.pdf}
+    \caption{Experiment 1 (Pilot Study) training and validation loss curves over 15 epochs. The left y-axis shows the training loss (blue circle), while the right y-axis displays the validation loss (red square). The star marker highlights the optimal generalization checkpoint at Epoch 3 ($1.1012$).}
+    \label{fig:loss_curve_pilot}
+\end{figure}
+
+The following key patterns are observed in Experiment 1:
+\begin{enumerate}
+    \item \textbf{Early Generalization Peak (Epoch 3):} Validation loss reaches its minimum of $1.1012$ at Epoch 3. Due to the small sample size ($900$ training samples), the model rapidly exhausts the diversity of the subset, and further parameter updates lead to overfitting.
+    \item \textbf{Monotonic Divergence (Epochs 4--15):} Post-Epoch 3, the validation loss increases monotonically from $1.1133$ to $1.3216$, while the training loss steadily declines to $3.192$. This clear divergence demonstrates classic overfitting, indicating that a small-scale dataset is insufficient for training a 7B parameter model without early stopping or regularized data scaling.
+\end{enumerate}
+
+\subsubsection{Experiment 2: Data Augmentation via Pitch-Shifting (3,162 Samples)}
+To evaluate the impact of physical audio perturbations as regularizers against overfitting, pitch-shifting augmentation is conducted (Experiment 2). The training set consists of 1,054 original samples augmented by $+2$ and $-2$ semitones, scaling the training corpus to 3,162 samples, while evaluating on the same 117 held-out validation samples. The training and validation loss history is detailed in Table~\ref{tab:qwen_loss_history_augmented} and plotted in Figure~\ref{fig:loss_curve_augmented}.
+
+\begin{table}[h]
+    \caption{Experiment 2 (Data Augmentation) Training and Validation Loss History}
+    \label{tab:qwen_loss_history_augmented}
+    \centering
+    \footnotesize
+    \begin{tabular}{lllp{2.4cm}}
+        \toprule
+        \textbf{Epoch} & \textbf{Train Loss} & \textbf{Val Loss}      & \textbf{Observation}                       \\ \midrule
+        1              & 10.648              & 1.1151                 & Model training begins with augmented scale \\
+        2              & 9.632               & \textbf{1.0937} (Best) & Best checkpoint (Optimal generalization)   \\
+        3              & 8.433               & 1.1078                 & Onset of early overfitting                 \\
+        4              & 7.260               & 1.1524                 & Sharp validation loss rise                 \\
+        5              & 6.101               & 1.2121                 & Monotonic validation loss degradation      \\
+        6              & 5.098               & 1.2729                 & -                                          \\
+        7              & 4.211               & 1.3297                 & -                                          \\
+        8              & 3.461               & 1.4217                 & -                                          \\
+        9              & 2.871               & 1.4864                 & -                                          \\
+        10             & 2.393               & 1.5712                 & -                                          \\
+        11             & 2.048               & 1.6339                 & -                                          \\
+        12             & 1.812               & 1.6839                 & -                                          \\
+        13             & 1.645               & 1.7175                 & -                                          \\
+        14             & 1.568               & 1.7449                 & -                                          \\
+        15             & 1.526               & 1.7501                 & Training terminates; severe memorization   \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{loss_curve_augmented.pdf}
+    \caption{Experiment 2 (Data Augmentation) training and validation loss curves over 15 epochs. The left y-axis shows the average training loss (blue circle), while the right y-axis displays the validation loss (red square). The star marker highlights the optimal generalization checkpoint at Epoch 2 ($1.0937$).}
+    \label{fig:loss_curve_augmented}
+\end{figure}
+
+The training trajectory in Experiment 2 reveals two critical insights:
+\begin{enumerate}
+    \item \textbf{Accelerated Overfitting Peak (Epoch 2):} Although training data scale is tripled (from 1,054 to 3,162 samples) using pitch shifting, the validation loss reaches its minimum of $1.0937$ at Epoch 2. This is earlier than the Epoch 3 optimal checkpoints of the non-augmented runs.
+    \item \textbf{Catastrophic Late Divergence:} Post-Epoch 2, validation loss degrades severely and monotonically to $1.7501$ at Epoch 15 (a $60\%$ increase relative to the best checkpoint), while the training loss converges down to $1.526$. Since the pitch-shifted audio signals share identical captions with the original recordings, the model quickly memorizes the association between acoustic pitch variations and the fixed text templates. This adds repetition rather than semantic diversity, leading to severe overfitting. Thus, pitch augmentation backfired, demonstrating that physical augmentations must be paired with appropriate label variations or replaced with genuine semantic diversity to prevent premature saturation.
+\end{enumerate}
+
+\subsubsection{Experiment 3: Full-Scale Experiment Dynamics (5,165 Clips)}
+In the full-scale experiment, the model is trained on the stratified training set of 4,125 samples and validated on 520 samples. The training and validation loss history is summarized in Table~\ref{tab:qwen_loss_history_full} and plotted in Figure~\ref{fig:loss_curve_full}.
+
+\begin{table}[h]
+    \caption{Experiment 3 (Full-Scale) Training and Validation Loss History}
+    \label{tab:qwen_loss_history_full}
+    \centering
+    \footnotesize
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Epoch} & \textbf{Train (Avg)} & \textbf{Train (Last)} & \textbf{Val Loss}      \\ \midrule
+        1              & 9.2134               & 8.5030                & 1.1250                 \\
+        2              & 8.5635               & 8.2190                & 1.0940                 \\
+        3              & 7.9246               & 8.1050                & \textbf{1.0890} (Best) \\
+        4              & 7.2884               & 7.8590                & 1.1000                 \\
+        5              & 6.7227               & 7.6640                & 1.1170                 \\
+        6              & 6.1667               & 6.5780                & 1.1420                 \\
+        7              & 9.0432 (spike)       & 9.2450                & 1.1230                 \\
+        8              & 8.4522               & 8.9770                & 1.1050                 \\
+        9              & 8.0534               & 8.4250                & 1.1000                 \\
+        10             & 7.7430               & 8.7120                & 1.0980                 \\
+        11             & 7.5216               & 7.3580                & 1.1010                 \\
+        12             & 9.2922 (spike)       & 9.2210                & 1.1560                 \\
+        13             & 8.9698               & 8.8290                & 1.1450                 \\
+        14             & 8.9123               & 8.5360                & 1.1410                 \\
+        15             & 8.8581               & 9.4670                & 1.1410                 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{loss_curve.pdf}
+    \caption{Experiment 3 (Full-Scale) training and validation loss curves over 15 epochs. The left y-axis shows the average training loss (blue circle), while the right y-axis displays the validation loss (red square). The star marker highlights the optimal generalization checkpoint at Epoch 3 ($1.0890$).}
+    \label{fig:loss_curve_full}
+\end{figure}
+
+Several key patterns are identified in the training trajectory of Experiment 3:
+\begin{enumerate}
+    \item \textbf{Improved Generalization and Stability:} The validation loss reaches its absolute minimum of $1.0890$ at Epoch 3 (slightly lower than the $1.1012$ in the pilot study). More importantly, the validation loss stays relatively stable, hovering between $1.09$ and $1.15$ throughout the 15 epochs, instead of diverging severely as in Experiment 1. This demonstrates that the larger, stratified dataset provides significant regularization, preventing catastrophic overfitting.
+    \item \textbf{Optimization Spikes (Epochs 7 and 12):} Sudden spikes in average training loss are observed (rising from 6.1667 to 9.0432 in Epoch 7, and from 7.5216 to 9.2922 in Epoch 12). These periodic jumps are followed by rapid recovery phases. This cyclic training instability suggests gradient variance issues under small batch sizes (effective batch size = 8) and highlights potential limitations in scheduling or data collation order over epochs.
+\end{enumerate}
+
+\subsection{Zero-Shot Gemma 4 Baselines and Comparative Analysis}
+The quantitative results comparing our fine-tuned Qwen2-Audio PEFT model against the zero-shot baseline and the Gemma 4 models are summarized in Table~\ref{tab:gemma_zeroshot}.
+
+\begin{table*}[t]
+    \caption{Overall Quantitative Performance Comparison Across Qwen2-Audio and Gemma 4 Models on the MusicCaps Test Split ($n=520$)}
+    \label{tab:gemma_zeroshot}
+    \centering
+    \footnotesize
+    \begin{tabular}{lcccc}
+        \toprule
+        \textbf{Metric} & \textbf{Qwen Baseline} & \textbf{Qwen FT (Ours)}      & \textbf{Gemma 12B}  & \textbf{Gemma E4B}  \\ \midrule
+        ROUGE-1         & $0.4826 \pm 0.1987$    & $\mathbf{0.5035 \pm 0.2080}$ & $0.1670 \pm 0.0494$ & $0.1681 \pm 0.0511$ \\
+        ROUGE-2         & $0.2437 \pm 0.2173$    & $\mathbf{0.2711 \pm 0.2355}$ & $0.0170 \pm 0.0144$ & $0.0162 \pm 0.0141$ \\
+        ROUGE-L         & $0.3882 \pm 0.2117$    & $\mathbf{0.4095 \pm 0.2228}$ & $0.1099 \pm 0.0267$ & $0.1086 \pm 0.0276$ \\
+        BLEU            & $0.1798 \pm 0.2023$    & $\mathbf{0.2044 \pm 0.2223}$ & $0.0005 \pm 0.0032$ & $0.0009 \pm 0.0041$ \\
+        METEOR          & $0.4001 \pm 0.2148$    & $\mathbf{0.4184 \pm 0.2297}$ & $0.1839 \pm 0.0346$ & $0.1974 \pm 0.0365$ \\
+        \bottomrule
+    \end{tabular}
+    \vspace{1ex}
+    \begin{flushleft}
+        \scriptsize Note: All values are reported as Mean $\pm$ Sample Standard Deviation (SD) of individual clip scores across the 520 test samples, representing the variation in performance across different musical pieces. Bold numbers indicate the best performance in each metric.
+    \end{flushleft}
+\end{table*}
+
+The zero-shot n-gram overlap metrics (BLEU, ROUGE-2) for both Gemma models are exceptionally low. Qualitative analysis reveals that this is primarily due to an \textbf{output-style and formatting mismatch} rather than a complete lack of descriptive ability:
+\begin{itemize}
+    \item \textbf{Verbosity:} The Gemma models generate verbose, markdown-formatted structures (average length of 161.7 words for 12B, and 181.9 words for E4B), whereas the reference captions are concise paragraph prose (average length 48.4 words). The excess tokens and structural markdown headers severely penalize precision-based metrics.
+    \item \textbf{METEOR Gain:} The encoder-based E4B shows a statistically significant improvement in METEOR (+0.0135) over the 12B, indicating better semantic capturing of audio cues.
+\end{itemize}
+
+Crucially, the native audio encoder plays a vital role in preventing \textbf{template collapse}. Zero-shot spot checks indicate that:
+\begin{itemize}
+    \item The encoder-free 12B model collapses onto a single generic template (labeling raw inputs as "high-energy EDM / Hardstyle") for \textbf{65\% (339/520)} of all test clips, regardless of whether the music is country, choral, or classical.
+    \item In contrast, the encoder-based E4B model collapses on this template only \textbf{17\% (90/520)} of the time, producing highly diverse (albeit frequently inaccurate) outputs representing Ambient, Afrobeat, and orchestral genres.
+\end{itemize}
+This indicates that the native audio encoder injects a genuine, content-grounded signal that breaks structural template collapse, although fine-tuning remains indispensable for accurate content identification.
+
+\subsection{Direct Comparison: Fine-Tuned Model vs. Zero-Shot Gemma 4}
+A direct comparison between the fine-tuned Qwen2-Audio PEFT model (Table~\ref{tab:qwen_results}) and the zero-shot Gemma 4 models (Table~\ref{tab:gemma_zeroshot}) underscores the massive performance gap between domain-specific adaptation and general zero-shot inference. Although Gemma 4 E4B is a state-of-the-art model containing billions of parameters, its zero-shot performance is heavily constrained. Specifically, the fine-tuned Qwen2-Audio model achieves a mean BLEU score of $0.2044$ (with a sample standard deviation of $0.2223$), which is more than 220 times higher than Gemma 4 E4B's score of $0.0009 \pm 0.0041$. Similarly, ROUGE-1 improves from $0.1681 \pm 0.0511$ (Gemma 4 E4B) to a mean of $0.5035$ (with a sample standard deviation of $0.2080$) for our fine-tuned model, and METEOR more than doubles from $0.1974 \pm 0.0365$ to a mean of $0.4184$ (with a sample standard deviation of $0.2297$). This enormous difference demonstrates that even highly advanced foundational models struggle to align structurally and semantically with specialized tasks without parameter-efficient fine-tuning. This highlights that PEFT is a critical and cost-effective necessity for deploying reliable, domain-specific audio description systems.
+
+\subsection{Interpretability and Temporal-Semantic Alignment via Audio-Token Activation Maps (Audio-TAM)}
+\label{sec:tam_analysis}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\columnwidth]{TAM_result_cropped.png}
+    \caption{Visualized Audio-Token Activation Map (Audio-TAM) on a single music clip. The top panel shows the original audio waveform. The subsequent heatmaps display the causal language model projection activation density of representative generated tokens: a grammatical function word (\texttt{'The'}) showing diffuse, scattered activation, vs. content-bearing tokens (\texttt{'live'}, \texttt{'strings'}, \texttt{'melody'}) showing more localized activation patterns.}
+    \label{fig:tam_visualization}
+\end{figure}
+
+To investigate whether multimodal large language models successfully capture temporal-semantic alignment---meaning that when the model generates a specific instrument token (e.g., "piano" or "drum"), the corresponding internal attention weights or activations align with the actual timestamps where the instrument is present in the raw audio---Audio-Token Activation Maps (Audio-TAM), adapted from the general Token Activation Maps (TAM)~\cite{li2025token} framework described in Section~\ref{sec:interpretability_tam_background}, are implemented and analyzed. Specifically, the spatial visual feature sequence $\mathbf{F}^v$ is replaced by the temporal audio projection feature sequence $\mathbf{F}^{\text{audio}} \in \mathbb{R}^{n_a \times c}$ (or $\mathbf{X}$) extracted from the raw audio waveform, mapping textual tokens back to specific temporal frames instead of spatial image patches. A representative visualization of the activation densities for a single music clip is presented in Figure~\ref{fig:tam_visualization}.
+
+\subsubsection{Methodology and Proxy Validation on MusicCaps}
+Evaluating temporal alignment on standard music captioning datasets like MusicCaps presents a primary challenge: the absence of second-level alignment annotations (ground truth). The dataset only provides clip-level textual captions and aspect labels without indicating when specific instruments or structures occur.
+
+To circumvent this limitation and validate the reliability of Audio-TAM as an interpretability tool, several proxy evaluation strategies are developed:
+\begin{enumerate}
+    \item \textbf{Silence Padding Test:} Padded $10$-second silence segments are appended to both the beginning and the end of active audio clips. The resulting activation maps are analyzed to verify if the peak activation of generated tokens correctly shifts and concentrates within the central active audio region. Across $6$ out of $6$ randomly selected test cases, the peak activations correctly fall inside the active audio boundary, proving that Audio-TAM can distinguish between audio activity and silence.
+    \item \textbf{Dual-Clip Concatenation (A+B) Test:} Two audio clips featuring completely different instrumentations are spliced together to form a composite track (A+B). In an ideal alignment map, when the model generates a token describing the instrument in clip A, the activation map should peak in the first half of the sequence. However, because MusicCaps contains real-world recordings with dense multi-instrument mixing and residual background overlaps, the ground truth boundaries are highly polluted, leading to noisy and inconclusive results, which forced this approach to be discarded.
+    \item \textbf{Core Noun Extraction:} Textual aspect labels in MusicCaps are often complex noun phrases (e.g., "fast jazz drumming"). To ensure precise matching between generated tokens and the labels, a rule-based parser is designed to extract core nouns (e.g., "drumming") for token-activation alignment.
+    \item \textbf{Content vs. Function Word Ablation:} To verify if Audio-TAM possesses genuine semantic selectivity or merely acts as an audio energy detector, the activation maps of semantic content words (e.g., "guitar", "drum") are compared against grammatical function words (e.g., "the", "a"). The peakiness of the content word activations is measured to be $1.63$ times higher than that of the function words. This indicates a positive, albeit weak, semantic selectivity, demonstrating that Audio-TAM retains some degree of token-specific targeting.
+\end{enumerate}
+
+\subsubsection{Clean-Track Quantized Validation on BabySlakh}
+To perform a rigorous, fully quantized evaluation with clean, unpolluted ground truth, the BabySlakh dataset is utilized. BabySlakh contains $20$ MIDI-synthesized multi-track pieces, providing separate clean audio waveforms for each individual instrument track (e.g., piano, drums, bass). This enables exact mapping of when each instrument is active.
+
+A $15$-second segment (from $58$ to $73$ seconds) from Track00009 containing $7$ simultaneously active instruments is selected as the input. The generated caption tokens are aligned with the individual instrument tracks. A quantitative metric, \textit{Selectivity}, is defined as the correlation between the token's activation map and its corresponding correct instrument track minus its correlation with the incorrect instrument tracks. Three primary Audio-TAM strategies are evaluated:
+\begin{enumerate}
+    \item \textbf{LM-Head Audio-TAM:} This method maps the hidden states of intermediate audio frames directly to the vocabulary logit space using the model's causal language modeling head (\texttt{lm\_head}), estimating which tokens the model is pre-disposed to output at each audio frame. The experimental results yield a low mean selectivity of only $0.087$, with the best-performing token ("drum") reaching only $0.18$. Crucially, the activation map for the "drum" token displays a higher correlation with the bass track waveform ($0.327$) than with the drum track waveform ($0.262$), indicating a failure to distinguish between overlapping instrument tracks.
+    \item \textbf{Attention Audio-TAM:} This method extracts the self-attention weights of the causal decoder layers, measuring how generated tokens attend back to the acoustic projection tokens. Across all $33$ generated tokens in the sequence, the attention weights collapse onto the exact same temporal position: position 9 ($0.36$ seconds), which corresponds to the first non-silent frame immediately following the silence padding. Consequently, the selectivity is $0.0$, indicating that self-attention layers treat the audio sequence as a unified semantic block rather than performing fine-grained temporal tracking.
+    \item \textbf{Gradient Audio-TAM (Input $\times$ Gradient):} This method computes the gradient of the generated token logit with respect to the input audio representation, multiplying the gradient by the input values. The calculated mean selectivity is $0.059$, performing worse than the LM-Head method. This performance degradation indicates that when backpropagating through a deep $32$-layer Transformer decoder, the gradient signal is heavily degraded by architectural noise. Furthermore, this method requires a separate backpropagation pass for every generated token, making it computationally prohibitive for large models ($7$B parameters) in real-time inference.
+\end{enumerate}
+
+\subsubsection{Architectural Diagnosis of Decoder-Only Multimodal LLMs}
+The consistent failure of all three Audio-TAM methods to establish fine-grained temporal-semantic alignment reveals a fundamental limitation of modern audio-language architectures. Source code analysis of Qwen-Audio and Qwen2-Audio models reveals a critical design detail: Qwen2-Audio is a decoder-only architecture where the output of the frozen audio tower is projected into the causal LLM decoder as a sequence of regular input tokens. This "audio-as-tokens" design lacks a dedicated cross-attention mechanism between the language decoder and the acoustic encoder.
+
+In multimodal vision-language models (e.g., those utilizing CLIP), cross-attention layers preserve direct, localized correspondence between textual tokens and visual segments. In contrast, in a decoder-only architecture, the self-attention layers blend the representations of all input tokens (system prompts, user instructions, and audio tokens) globally. Once the audio frames are mixed with prompt prefixes, the exact temporal correspondence is lost. An investigation of the first-generation Qwen-Audio source code (\texttt{modeling\_qwen.py}) reveals that while the parameter \texttt{encoder\_hidden\_states} is defined in \texttt{QWenAttention.forward()}, it is completely unused throughout the attention computation. Other popular open-weights audio LLMs, such as SALMONN, share this identical decoder-only + audio-as-tokens paradigm. This diagnosis confirms that the lack of temporal-semantic alignment in music captioning is not a failure of parameter fine-tuning, but rather a fundamental, structural constraint of decoder-only self-attention architectures.
+
+\subsection{Discussion of Goals, Assumptions, and Implications}
+
+The core goals, assumptions, and theoretical/practical implications of the results are addressed.
+
+First, the results directly validate the initial project goals and assumptions. The goal of this work was to improve both the structural alignment (conforming to the concise paragraph formatting of target captions) and semantic richness (accurately describing instrumentation, genre, and mood) of generated music descriptions. The zero-shot baselines (both Qwen2-Audio and Gemma 4) struggle heavily with style mismatch, generating overly verbose, list-based markdown files, or collapsing to generic EDM templates. By applying PEFT-LoRA to Qwen2-Audio-7B, the fine-tuned model achieved statistically significant boosts across all five metrics (+13.70\% BLEU and +11.24\% ROUGE-2 on held-out test data) and successfully aligned the output style with musician-curated references. This proves that low-resource parameter adaptation can successfully adapt general multimodal large language models to domain-specific audio tasks.
+
+Second, a comparative analysis with zero-shot Gemma 4 E4B and 12B models provides important insights into audio-language model architectures. It shows that although zero-shot surface-level n-gram overlap metrics (BLEU, ROUGE) are heavily penalized by length and formatting mismatches, the presence of a dedicated audio encoder (in E4B) is critical in preventing degenerate template collapse. E4B collapsed to generic templates only 17\% of the time, compared to 65\% for the encoder-free 12B model, indicating that the encoder injects a content-grounded signal that breaks collapse.
+
+Third, these findings carry both theoretical and practical implications:
+\begin{itemize}
+    \item \textbf{Practical Implications:} Multimodal model adaptation for music description can be accomplished efficiently with very low parameter counts (0.21\% trainable parameters) and minimal GPU hardware (24GB VRAM). This permits local deployments of music-tagging and captioning tools in digital streaming services or accessible media platforms without prohibitive computing costs.
+    \item \textbf{Theoretical Implications:} For multimodal instruction-tuned models, evaluation metrics relying solely on n-gram overlap (like BLEU/ROUGE) under-represent model capabilities due to instruction-induced formatting mismatches. A comprehensive evaluation must incorporate semantic metrics (such as METEOR) and qualitative error analysis (such as template collapse rates) to fully capture the performance of the audio-text alignment layer.
+\end{itemize}
+
+\section{Summary}
+\label{sec:summary}
+
+\subsection{Difficulties Experienced}
+Several key technical difficulties were encountered during this project:
+\begin{enumerate}
+    \item \textbf{Hardware Constraints and OOMs:} Fine-tuning and evaluating 7B parameter models on a single GPU frequently triggered out-of-memory errors. This was resolved by using custom garbage collection callbacks and prediction chunking.
+    \item \textbf{Spike-like Training Instability:} Training Qwen2-Audio with low-rank adapters showed periodic loss spikes, indicating optimization noise under small training subsets.
+    \item \textbf{Zero-Shot Style Mismatch:} Off-the-shelf instruction-tuned models exhibit a strong formatting bias (lists, headers, verbosity) that conflicts with standard sequence-to-sequence evaluation references, requiring custom metric analyses.
+    \item \textbf{Temporal Alignment and Interpretability Constraints:} Resolving fine-grained instrument alignment via Audio-Token Activation Maps (Audio-TAM) was heavily constrained across multiple methods (LM-Head, Attention, Gradient). The lack of cross-attention layers in decoder-only audio LLMs represents a structural barrier for mapping textual outputs back to specific timestamps in raw audio waveforms.
+\end{enumerate}
+
+\subsection{Future Directions}
+For future work, the following directions are proposed:
+\begin{enumerate}
+    \item \textbf{Style-Corrected Prompting:} Exploring instruction templates that constrain zero-shot models to concise prose outputs.
+    \item \textbf{Semantic Caption Paraphrasing:} Utilizing LLMs to rewrite reference captions to increase training data diversity, preventing early overfitting.
+    \item \textbf{PEFT Adaptation on Gemma 4 E4B:} Applying LoRA tuning directly to the native-audio E4B architecture to combine its structural stability with domain-specific accuracy.
+    \item \textbf{Cross-Attention Architectural Redesign:} Introducing dedicated cross-attention layers between the audio encoder and language decoder to preserve localized, fine-grained temporal-semantic alignment, overcoming the alignment limits of decoder-only LLMs.
+\end{enumerate}
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
