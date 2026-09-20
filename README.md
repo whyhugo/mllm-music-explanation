@@ -25,12 +25,13 @@
 4. [誠實評估結果](#誠實評估結果)
 5. [跨模型 Zero-Shot 對照（Gemma 4）](#跨模型-zero-shot-對照gemma-4)
 6. [可解釋性分析（Audio-TAM）](#可解釋性分析audio-tam)
-7. [環境建置](#環境建置)
-8. [執行流程](#執行流程)
-9. [超參數說明](#超參數說明)
-10. [已知陷阱與教訓](#已知陷阱與教訓)
-11. [論文 / 報告](#論文--報告)
-12. [專案結構](#專案結構)
+7. [未來方向](#未來方向report-future-directions)
+8. [環境建置](#環境建置)
+9. [執行流程](#執行流程)
+10. [超參數說明](#超參數說明)
+11. [已知陷阱與教訓](#已知陷阱與教訓)
+12. [論文 / 報告](#論文--報告)
+13. [專案結構](#專案結構)
 
 ---
 
@@ -62,7 +63,25 @@ Audio (.wav, 16 kHz)
 | Multi-Modal Projector | 解凍 | 橋接音頻特徵與 LLM 輸入空間 |
 | Qwen2-7B LLM | LoRA | r=16, alpha=32, dropout=0.05 |
 | LoRA 目標模組 | q/k/v/o_proj | LLM 自注意力層 |
-| 可訓練參數 | ~16.8 M / 7.77 B | 佔總參數 0.22% |
+| 可訓練參數 | 16.78 M / 7.77 B | 佔總參數 **0.2159%** |
+
+**輸入格式與 Loss Masking**
+
+輸入以 ChatML 組裝，audio token 置於 user block 內：
+
+```
+<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+Audio: <audio_tokens>
+Please describe this music in detail
+and list its aspects.<|im_end|>
+<|im_start|>assistant
+[Ground Truth Caption]<|im_end|>
+```
+
+Cross-entropy **只在 assistant 回應區塊內計算**；system / user prompt 與 audio projection token
+一律標為 `-100`，避免模型在 prompt 樣板上扭曲既有語言先驗。
 
 ---
 
@@ -109,11 +128,16 @@ python data/split.py --stats
 python data/split.py --val_ratio 0.15 --test_ratio 0.15 --seed 42
 ```
 
-### 早期（1267 筆時代）的切分
+### 三階段實驗所用的資料（依 `report/main.tex` §Design of Experiments）
 
-exp-005b / exp-006 是在資料集尚只有 1267 筆音頻時跑的，當時的切分為 `data/train.json`（1054）
-/ `data/val.json`（117），這些檔案已從 repo 移除。**那批數字不可與目前 5165 筆切分的結果並排比較**，
-若要重現需手動還原（見 git log）。
+| 階段 | 資料規模 | 切分 | 說明 |
+|------|----------|------|------|
+| Experiment 1（Pilot Study） | 1,100 筆已下載片段的子集 | 900 / 100 / 100 | 驗證超參數與收斂性質 |
+| Experiment 2（Data Augmentation） | 1,054 筆訓練樣本 ×3（±2 semitone） = 3,162 | val 117 筆 held-out | 檢驗 pitch-shift 的正則化效果 |
+| **Experiment 3（Full-Scale）** | **5,165 筆完整可用片段** | **4,125 / 520 / 520**（aspect-stratified，top-15） | **論文正式結果** |
+
+Experiment 1 / 2 使用的舊切分檔（`data/train.json`、`data/val.json`、`data/train_augmented.json`）
+已從 repo 移除，**那批數字不可與 Experiment 3 的結果並排比較**；若要重現需手動還原（見 git log）。
 
 | 已刪除的舊檔案 | 原出處 | 移除原因 |
 |----------------|--------|----------|
@@ -211,14 +235,15 @@ exp-{三位數}-{說明}    exp-009-lora-r32
 
 ## 誠實評估結果
 
-> 下表僅列出使用**真正 held-out 資料**的實驗。
+> **本節一律以 `report/main.tex` 為準**；`experiments/runs.json` 內的早期數字僅作為實驗紀錄保留。
 > exp-001～exp-004 的指標在 in-sample 或未完整切分的資料上計算，**不應作為比較基準**。
 
-### 最終結果（held-out test set，520 筆；論文採用）
+### 最終結果：Experiment 3（held-out test set，520 筆）
 
-全量訓練（4125 train / 520 val，15 epochs，best = ep3，val_loss = 1.0890，約 15 小時）後，
+全量訓練（4,125 train / 520 val，15 epochs，best = ep3，val_loss = 1.0890，約 15 小時）後，
 在 `data/musiccaps_test.json` 上做**唯一一次**評估。指標以「每個 clip 分數」的
-Mean ± Sample SD 呈現，並以 1000 輪 Bootstrap 估算平均值的標準誤（SE）。
+Mean ± Sample SD 呈現，並以 B = 1000 輪 non-parametric bootstrap（每輪對 520 筆做 with-replacement
+重抽）估算平均值的標準誤（SE）。
 
 | 指標 | Baseline (M±SD) | Base SE | Fine-Tuned (M±SD) | FT SE | 相對提升 |
 |------|-----------------|---------|-------------------|-------|----------|
@@ -228,13 +253,24 @@ Mean ± Sample SD 呈現，並以 1000 輪 Bootstrap 估算平均值的標準誤
 | BLEU | 0.1798 ± 0.2023 | 0.0089 | **0.2044 ± 0.2223** | 0.0098 | +13.70% |
 | METEOR | 0.4001 ± 0.2148 | 0.0095 | **0.4184 ± 0.2297** | 0.0102 | +4.58% |
 
-**全量訓練的 loss 動態**（詳見 `report/main.tex` Experiment 3、`report/loss_curve.png`）
+### 三階段訓練動態對照（report §Training Dynamics）
 
-- val_loss 最低點在 **ep3（1.0890）**，之後在 1.09–1.15 之間震盪，**未出現 1267 筆時代那種單調發散**
-  → 較大且分層的訓練集本身即具正則化效果。
-- ep7 與 ep12 出現訓練 loss 突刺（6.17 → 9.04、7.52 → 9.29），推測與 effective batch size = 8 的梯度變異有關。
+| 階段 | 訓練 / 驗證規模 | Best epoch | Best val_loss | ep15 val_loss | 觀察 |
+|------|-----------------|-----------|---------------|---------------|------|
+| Experiment 1（Pilot） | 900 / 100 | ep3 | 1.1012 | 1.3216 | ep4 起單調發散，典型小資料過擬合 |
+| Experiment 2（Augmented） | 3,162 / 117 | **ep2** | 1.0937 | 1.7501 | 最佳點更早，之後劇烈惡化（+60%） |
+| **Experiment 3（Full-Scale）** | **4,125 / 520** | **ep3** | **1.0890** | 1.1410 | val_loss 全程僅在 1.09–1.15 震盪，未發散 |
 
-### 早期小規模實驗（1267 筆時代，**不可與上表並排比較**）
+- Experiment 3 的 val_loss 不再單調發散 → **較大且 aspect-stratified 的訓練集本身即具正則化效果**。
+- ep7 與 ep12 出現訓練 loss 突刺（6.1667 → 9.0432、7.5216 → 9.2922），隨後自行恢復；
+  report 歸因於 effective batch size = 8 下的梯度變異與跨 epoch 的 collation 順序。
+- 曲線圖：`report/loss_curve.png`（Experiment 3），由 `report/plot_loss.py` 產生。
+
+### 早期小規模實驗的指標紀錄（repo 內部紀錄，**report 未採用**）
+
+以下為 `experiments/runs.json` 中 Experiment 1 / 2 時期的評估數字。它們是在 117 筆小 val 集上、
+以 corpus-level 方式計算，與 report 的 520 筆 test set + per-clip bootstrap 不同，
+**不可與上表並排比較，對外引用一律以上方 Experiment 3 表格為準**。
 
 **Baseline**（無微調，`Qwen2-Audio-7B-Instruct` 原始模型，在舊 `data/val.json` 117 筆）
 
@@ -249,14 +285,13 @@ Mean ± Sample SD 呈現，並以 1000 輪 Bootstrap 估算平均值的標準誤
 | exp-005b | train.json | 1054 | 5（ep3 最佳） | ep3 / val_loss=1.1125 | 0.5875 | 0.3601 | 0.4828 | 0.3066 | 0.4924 | **+24.0%** |
 | exp-006 | train_augmented.json | 3162 | 15（ep2 最佳） | ep2 / val_loss=1.0937 | 0.5408 | 0.3133 | 0.4393 | 0.2659 | 0.4496 | +10.7% |
 
-> 這兩筆的 +24% / +10.7% 是 **corpus-level、117 筆小 val 集**的數字，樣本少且指標計算方式與最終 test
-> 評估不同，因此明顯高於最終 test 上的 +4~14%。**對外引用一律以上方 test set 表格為準。**
+**關鍵發現（report §Results 結論）**
 
-**關鍵發現**
-
-- **Pitch augmentation 無效**（exp-006）：相同標注重複 3 次讓模型快速記憶片段分布，overfitting 更早發生（ep2 vs ep3）。
-- **資料多樣性 > 資料數量**：augmented 3162 筆（含重複）不如 1054 筆真實多樣樣本。
-- **擴增到 4125 筆真實樣本後**，val_loss 不再單調發散，證實「真實多樣性」才是有效的正則化。
+- **PEFT 有效且顯著**：0.2159% 的可訓練參數即可在 held-out test 上取得 BLEU +13.70%、ROUGE-2 +11.24%。
+- **Pitch augmentation 無效**（Experiment 2）：音高與音樂描述無關、標注完全相同，
+  模型只是更快記住 1,054 個片段的分布，最佳點從 ep3 提前到 ep2。
+- **資料多樣性 > 資料數量**：3,162 筆（含重複）不如 1,054 筆真實多樣樣本；
+  擴增到 4,125 筆**真實**樣本後 val_loss 才不再發散。
 
 **探索性實驗（不可直接與上表比較）**
 
@@ -274,10 +309,10 @@ Mean ± Sample SD 呈現，並以 1000 輪 Bootstrap 估算平均值的標準誤
 在**同一份** held-out test split（520 筆）上，評估 Google Gemma 4 兩種音頻架構的 zero-shot 表現
 （`gemma/evaluate_gemma.py`，詳見 [`gemma/README.md`](gemma/README.md) 與 `report/gemma_baseline_results.md`）。
 
-| Exp | 模型 | 音頻架構 | 微調 |
-|-----|------|----------|------|
-| exp-007 | `google/gemma-4-E4B-it` | 音頻 encoder（USM-style） | 無（zero-shot） |
-| exp-008 | `google/gemma-4-12B-it` | encoder-free（raw waveform → linear projection） | 無（zero-shot） |
+| Exp | 模型 | 音頻架構 | 規模 / 發布 | 微調 |
+|-----|------|----------|-------------|------|
+| exp-007 | `google/gemma-4-E4B-it` | 音頻 encoder（USM-style） | 2026-06-02 發布 | 無（zero-shot） |
+| exp-008 | `google/gemma-4-12B-it` | encoder-free（raw waveform → linear projection） | ~11.95B dense，2026-04-16 發布 | 無（zero-shot） |
 
 | 指標 | Qwen Baseline | **Qwen FT（本專案）** | Gemma 12B | Gemma E4B |
 |------|---------------|----------------------|-----------|-----------|
@@ -306,13 +341,29 @@ Mean ± Sample SD 呈現，並以 1000 輪 Bootstrap 估算平均值的標準誤
 report 中另外實作了 **Audio-TAM**（把 Token Activation Maps（Li et al., ICCV 2025） 從視覺 patch 延伸到音頻時間軸），
 用來檢驗「模型生成 `piano` 這個 token 時，是否真的對齊到音頻中鋼琴出現的時間」。
 
-- 代理驗證（MusicCaps 無秒級標注）：silence padding 測試 6/6 通過；content word 的 peakiness 為 function word 的 **1.63 倍**（弱但存在的語意選擇性）。
-- BabySlakh 乾淨多軌量化驗證：LM-Head selectivity 僅 **0.087**、Gradient **0.059**、Attention **0.0**（所有 token 塌陷到同一時間位置）。
+- 代理驗證（MusicCaps 無秒級標注）：
+  - **Silence padding**：前後各補 10 秒靜音，6/6 隨機案例的峰值活化都正確落在有聲區間內。
+  - **Dual-clip (A+B) 拼接**：MusicCaps 為真實錄音、多樂器混音嚴重，邊界被污染，結果不可用 → **已捨棄**。
+  - **Core noun extraction**：以規則式 parser 從 "fast jazz drumming" 抽出核心名詞 "drumming" 再對齊。
+  - **Content vs. function word**：content word 的 peakiness 為 function word 的 **1.63 倍**（弱但存在的語意選擇性）。
+- BabySlakh 乾淨多軌量化驗證（Track00009 的 58–73 秒、7 件同時發聲樂器）：
+  LM-Head selectivity 僅 **0.087**（最佳 token "drum" 也只有 0.18，且與 bass 軌相關性 0.327 > drum 軌 0.262）、
+  Gradient **0.059**、Attention **0.0**（全部 33 個 token 塌陷到同一時間位置 9，即 0.36 秒）。
 - 診斷：Qwen2-Audio 屬 decoder-only「audio-as-tokens」架構，**缺少 decoder↔encoder cross-attention**，
   時間對應在 self-attention 全域混合後即遺失 → 這是架構層級限制，並非微調不足。
 
 > Audio-TAM 的分析與圖表在 `report/`（`main.tex` §Audio-TAM、`TAM_result_cropped.png`）；
 > **實驗腳本尚未併入本 repo**。
+
+---
+
+## 未來方向（report §Future Directions）
+
+1. **Style-Corrected Prompting**：設計能約束 zero-shot 模型輸出精簡散文的 instruction template。
+2. **Semantic Caption Paraphrasing**：以 LLM 改寫 reference caption 增加訓練資料的語意多樣性，延後過擬合。
+3. **PEFT on Gemma 4 E4B**：對原生音頻 encoder 架構直接做 LoRA，結合其結構穩定性與領域準確度。
+4. **Cross-Attention 架構改造**：在音頻 encoder 與語言 decoder 之間加入 cross-attention，
+   以保留細粒度的時間—語意對應，突破 decoder-only 架構的對齊極限。
 
 ---
 
@@ -376,12 +427,13 @@ data/musiccaps_test.json   —  520 筆（最終評估，訓練期間禁止使�
 
 | 項目 | 最低要求 |
 |------|----------|
-| GPU VRAM | 24 GB（已在 RTX 3090 / 4090 測試） |
+| GPU VRAM | 24 GB（report 全部實驗均在單張 NVIDIA RTX 3090 上完成） |
 | CUDA | 11.8+ |
 | Python | 3.10+ |
 | 磁碟空間 | ~20 GB 以上（原始音頻 ~3.7 GB + 單一 checkpoint 約 ~15 GB。**注意：** 若 `save_total_limit = None` 且保留所有 epoch checkpoints，15 個 epochs 累計會佔用超過 ~225 GB。若硬碟空間有限，建議設定 `save_total_limit` 限制數量，或訓練完成後僅保留輕量化的 `checkpoint-best` adapter） |
 
-> 參考耗時：1267 筆時代的 pilot run 約 2.5 小時；全量 4125 筆 × 15 epochs 約 **15 小時**（單張 RTX 3090）。
+> 參考耗時（report 實測）：Experiment 1 pilot 約 **2.5 小時**（本機工作站）；
+> Experiment 3 全量 4125 筆 × 15 epochs 約 **15 小時**（RunPod 雲端，單張 RTX 3090）。
 
 ---
 
@@ -487,10 +539,13 @@ python qwen/augment_dataset.py --help
 
 以下為目前訓練腳本（`qwen/train_lora_qwen.py`）的預設值，調整前請在 runs.json 說明原因。
 
+> report §Hyperparameter and Training Details 載明：三階段實驗使用**完全相同**的最佳化超參數。
+
 | 超參數 | 預設值 | 說明 |
 |--------|--------|------|
-| `num_train_epochs` | 15 | 依 val_loss 早停，實際最佳通常在 ep2–ep4 |
-| `learning_rate` | 1e-5 | exp-001 用 2e-5 導致梯度爆炸，降至此值穩定 |
+| optimizer | AdamW | |
+| `num_train_epochs` | 15 | 依 val_loss 早停，三階段最佳點皆落在 ep2–ep3 |
+| `learning_rate` | 1e-5 | 由 2e-5 調降至 1e-5 以抑制梯度不穩（exp-001 用 2e-5 曾梯度爆炸） |
 | `gradient_accumulation_steps` | 8 | effective batch size = 8（batch=1 × accum=8） |
 | `max_grad_norm` | 0.5 | 訓練中實際梯度範數 15–40（此為裁切後上限） |
 | `warmup_steps` | 動態 | 設為 total_steps 的 10%，由腳本計算 |
@@ -527,8 +582,8 @@ exp-004 在訓練集上評估得到 +55.65%；exp-005b 在 held-out val 得到 +
 ### 4. Pitch augmentation 無效（exp-006）
 
 3 倍 pitch-shifted 資料讓訓練集從 1054 增至 3162，但標注完全相同（音樂描述與音高無關），
-模型更快記住 1054 個獨立片段的分布，overfitting 從 ep4 提前至 ep2。
-最終 exp-006 比 exp-005b 差 -10.4%。
+模型更快記住 1054 個獨立片段的分布，最佳 checkpoint 從 **ep3 提前至 ep2**，
+且 ep2 之後 val_loss 單調惡化至 1.7501（ep15，相對最佳點 +60%）。
 → **同標注的 augmentation 增加重複，不增加多樣性**。
 
 ### 5. OOM 解法（確認已套用）
